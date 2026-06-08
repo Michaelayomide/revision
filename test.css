@@ -1,0 +1,67 @@
+        :root {
+            --primary: #6366f1;
+            --dark: #1e2937;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .navbar { background: var(--dark) !important; }
+        
+        .sidebar {
+            background: var(--dark); 
+            color: white; 
+            height: 100vh; 
+            position: fixed; 
+            top: 0; 
+            left: 0;
+            width: 270px; 
+            z-index: 100; 
+            padding-top: 75px; 
+            box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            margin-left: 270px;
+            padding: 30px 25px;
+            flex: 1 0 auto;           /* Makes content grow */
+        }
+        
+        footer {
+            margin-left: 270px;
+            background: #1e2937;
+            color: white;
+            padding: 25px 0;
+            flex-shrink: 0;           /* Prevents shrinking */
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .sidebar { display: none; }
+            .main-content, footer { margin-left: 0; }
+        }
+        
+        .welcome-header {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white; 
+            padding: 28px 30px; 
+            border-radius: 16px;
+            margin-top: 20px; 
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }

@@ -1,0 +1,135 @@
+:root {
+    --primary: #6366f1;
+    --dark: #1e2937;
+    --light: #f1f5f9;
+}
+
+body {
+    background: var(--light);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Navbar */
+.navbar {
+    background: var(--dark) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+/* Sidebar */
+.sidebar {
+    background: var(--dark);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 270px;
+    z-index: 100;
+    padding-top: 75px;
+    box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+}
+
+.sidebar .nav-link {
+    color: #cbd5e1;
+    padding: 15px 25px;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: #334155;
+    color: white;
+    border-left: 4px solid var(--primary);
+    transform: translateX(8px);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 270px;
+    padding: 30px 25px;
+    flex: 1 0 auto;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+/* Welcome Header */
+.welcome-header {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    padding: 28px 30px;
+    border-radius: 16px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+/* Stat Cards */
+.stat-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+/* Table Improvements */
+.table thead {
+    background: #f8fafc;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f5f9;
+    transform: scale(1.01);
+}
+
+/* Buttons */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Modal */
+.modal-content {
+    animation: modalPop 0.4s ease;
+}
+
+/* Footer */
+footer {
+    margin-left: 270px;
+    background: #1e2937;
+    color: white;
+    padding: 25px 0;
+    flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 992px) {
+    .sidebar { display: none; }
+    .main-content, footer { margin-left: 0; }
+}
