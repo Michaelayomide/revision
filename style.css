@@ -133,3 +133,19 @@ footer {
     .sidebar { display: none; }
     .main-content, footer { margin-left: 0; }
 }
+/* settings page */
+[data-theme="dark"] {
+    --light: #1e2937;
+    --dark: #0f172a;
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .card {
+    background: #1e2937;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .table-light {
+    background: #334155;
+}
