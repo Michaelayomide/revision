@@ -42,6 +42,7 @@
             <a href="index.html" class="nav-link"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
             <a href="user.html" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
             <a href="products.html" class="nav-link active"><i class="bi bi-box-seam me-2"></i> Products</a>
+             <a href="orders.html" class="nav-link active"><i class="bi bi-bag-check me-2"></i> Orders</a>
             <a href="report.html" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
             <a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
         </div>
@@ -57,6 +58,7 @@
                 <a href="index.html" class="nav-link px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
                 <a href="user.html" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
                 <a href="products.html" class="nav-link active px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
+                 <a href="orders.html" class="nav-link active"><i class="bi bi-bag-check me-2"></i> Orders</a>
                 <a href="report.html" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
                 <a href="settings.html" class="nav-link px-4 py-3"><i class="bi bi-gear me-3"></i> Settings</a>
             </div>
@@ -115,6 +117,7 @@
 
         <div class="card">
             <div class="card-body p-0">
+                <div class="table-responsive">
                 <table class="table table-hover mb-0" id="productsTable">
                     <thead class="table-light">
                         <tr>
@@ -135,15 +138,20 @@
                             <td>$89.99</td>
                             <td><span class="badge bg-success">124</span></td>
                             <td><span class="badge bg-success">In Stock</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(1)">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(1)">Delete</button>
+                            <td class="text-nowrap">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editProduct(1)">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(1)">Delete</button>
+                                </div>
                             </td>
+
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
+
     </div>
 
     <div class="modal fade" id="productModal" tabindex="-1">
