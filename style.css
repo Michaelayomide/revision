@@ -164,6 +164,9 @@ footer {
     #productModal{
         margin-top: 90px;
     }
+    .offcanvas-header{
+        margin-top: 50px;
+    }
 }
 
 /* Table responsiveness + prevent actions stacking */
