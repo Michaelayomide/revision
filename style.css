@@ -135,6 +135,187 @@ footer {
     padding: 25px 0;
     flex-shrink: 0;
 }
+/* ==========================================
+   UNIFIED AUTH LAYOUT (LOGIN & SIGNUP) WITH PANELS TOGGLE
+   ========================================== */
+
+/* Base full screen alignment system */
+.auth-body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background-color: #0f172a;
+}
+
+.auth-wrapper {
+    /* Replace 'your-background-pic.jpg' with your global background file */
+    background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('your-background-pic.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Master Flexible Container Card */
+.auth-card {
+    max-width: 920px;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+    display: flex; /* Flexbox replaces rigid bootstrap rows for fluid collapsing */
+    align-items: stretch;
+    min-height: 540px;
+}
+
+/* Left Brand Panel - Standard State */
+.auth-brand-panel {
+    background: linear-gradient(135deg, #198754, #0f5132);
+    flex: 0 0 40%; /* Takes up exactly 40% of the card width */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 45px;
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); /* Luxury easing slide effect */
+    opacity: 1;
+    visibility: visible;
+    overflow: hidden;
+}
+
+/* Right Content Form Area - Standard State */
+.auth-form-container {
+    flex: 1; /* Automatically takes up all remaining available width */
+    padding: 45px 50px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ==========================================
+   COLLAPSED INTERACTIVE STATE MODIFIERS
+   ========================================== */
+
+/* When the card receives the '.panel-collapsed' class via script */
+.auth-card.panel-collapsed .auth-brand-panel {
+    flex: 0 0 0%; /* Collapses width seamlessly to nothing */
+    padding: 45px 0px; /* Removes horizontal padding spacing */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Floating Action Panel Controller Toggle Button */
+.panel-toggle-btn {
+    position: absolute;
+    top: 25px;
+    left: -20px; /* Suspends beautifully along the dividing seam line */
+    width: 36px;
+    height: 36px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #198754;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.panel-toggle-btn:hover {
+    background-color: #f8fafc;
+    color: #146c43;
+    transform: scale(1.05);
+}
+
+/* If panel is collapsed, adjust the toggle button positioning offset */
+.auth-card.panel-collapsed .panel-toggle-btn {
+    left: 25px; /* Pulls inside card safety zone gracefully */
+}
+
+/* ==========================================
+   INPUTS & BUTTON COMPONENTS COSMETICS
+   ========================================== */
+.brand-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.input-group-text {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8;
+    padding-left: 16px;
+    padding-right: 12px;
+    border-radius: 10px 0 0 10px !important;
+}
+
+.form-control {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #334155;
+    font-size: 0.95rem;
+    padding: 11px 16px 11px 0px;
+    border-radius: 0 10px 10px 0 !important;
+}
+
+.form-control:focus {
+    box-shadow: none !important;
+    border-color: #198754 !important;
+    background-color: #ffffff !important;
+}
+
+.btn-submit-action {
+    background-color: #198754;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-submit-action:hover {
+    background-color: #146c43;
+    transform: translateY(-1px);
+}
+
+.form-check-input:checked {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.text-link-green {
+    color: #198754;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.text-link-green:hover {
+    color: #0f5132;
+    text-decoration: underline;
+}
+
+/* Responsive Hide Rule on Small Displays */
+@media (max-width: 768px) {
+    .auth-brand-panel, .panel-toggle-btn {
+        display: none !important;
+    }
+}
 
 /* Animations */
 @keyframes fadeIn {
