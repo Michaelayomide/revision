@@ -1,10 +1,10 @@
 <?php 
-// Start the session to catch data from backend/val.php
+// Start the session to catch standard validation data from backend/val.php
 session_start(); 
 
-// OPTIONAL: If an admin is ALREADY logged in, send them straight to the dashboard
+// If an admin is ALREADY logged in, send them straight to the dashboard
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-    header("Location: login.php");
+    header("Location: index.php");
     exit();
 }
 ?>
@@ -51,6 +51,19 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                 </div>
 
                 <form method="POST" action="backend/val.php">
+
+                    <?php if (isset($_GET['reason']) && $_GET['reason'] === 'timeout'): ?>
+    <div class="alert alert-warning py-2 mb-3 small d-flex align-items-center" style="border-radius: 10px; color: #856404; background-color: #fff3cd; border-color: #ffeeba;">
+        <i class="fa-solid fa-triangle-exclamation me-2 fs-6"></i>
+        <div>For your security, you were logged out due to inactivity.</div>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['status']) && $_GET['status'] === 'loggedout'): ?>
+    <div class="alert alert-success py-2 small mb-3" style="border-radius: 10px;">
+        <i class="fa-solid fa-circle-check me-2"></i>You have been safely and securely logged out.
+    </div>
+<?php endif; ?>
 
                     <?php if (isset($_SESSION['auth_errors'])): ?>
                         <div class="alert alert-danger py-2 mb-3" style="font-size: 0.9rem; border-radius: 10px;">

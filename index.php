@@ -1,4 +1,45 @@
-git<!DOCTYPE html>
+<?php
+session_start();
+
+// 1. SECURITY SHIELD
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: login.php");
+    exit();
+}
+
+// Create a safe fallback for the admin name if the session key is spelled differently
+$admin_display_name = $_SESSION['admin_name'] ?? $_SESSION['username'] ?? $_SESSION['email'] ?? 'Admin';
+
+// 2. INACTIVITY TIMEOUT (15 minutes)
+$max_idle_time = 900; 
+if (isset($_SESSION['last_activity'])) {
+    $idle_duration = time() - $_SESSION['last_activity'];
+    if ($idle_duration > $max_idle_time) {
+        header("Location: logout.php?reason=timeout");
+        exit();
+    }
+}
+$_SESSION['last_activity'] = time();
+
+// 3. ROBUST DATABASE CONNECTOR
+try {
+    // Double check your exact local database name here
+    $db = new PDO("mysql:host=localhost;dbname=your_database_name;charset=utf8", "root", "");
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // If your table is spelled 'admins' change it below
+    $query = $db->query("SELECT COUNT(*) FROM admis"); 
+    $total_admins = $query->fetchColumn();
+} catch (PDOException $e) {
+    $total_admins = "0"; // Displays 0 instead of leaving a blank space if connection drops
+}
+
+// 4. TIME-BASED GREETING
+date_default_timezone_set('Africa/Lagos'); 
+$hour = date('H');
+$greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "Good evening");
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,14 +52,13 @@ git<!DOCTYPE html>
 </head>
 <body>
 
-    <!-- Top Navbar -->
     <nav class="navbar navbar-dark fixed-top py-3 shadow-sm">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <button class="navbar-toggler me-3 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <a class="navbar-brand fw-bold fs-3" href="index.html">AdminHub</a>
+                <a class="navbar-brand fw-bold fs-3" href="index.php">AdminHub</a>
             </div>
             
             <div class="d-flex align-items-center gap-3">
@@ -28,9 +68,9 @@ git<!DOCTYPE html>
                     <i class="bi bi-envelope"></i>
                 </div>
                 <div class="d-flex align-items-center gap-2 text-white">
-                    <img src="https://via.placeholder.com/40" class="rounded-circle" alt="">
+                    <img src="https://via.placeholder.com/40" class="rounded-circle" alt="Avatar">
                     <div class="d-none d-sm-block">
-                        <small class="fw-bold">John Doe</small><br>
+                        <small class="fw-bold"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></small><br>
                         <small class="text-success">● Online</small>
                     </div>
                 </div>
@@ -38,19 +78,19 @@ git<!DOCTYPE html>
         </div>
     </nav>
 
-    <!-- Desktop Sidebar -->
     <div class="sidebar d-none d-lg-block">
         <div class="nav flex-column pt-3">
-            <a href="index.html" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-            <a href="user.html" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
-            <a href="products.html" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
-             <a href="orders.html" class="nav-link active"><i class="bi bi-bag-check me-2"></i> Orders</a>
-            <a href="reports.html" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
-            <a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
+            <a href="index.php" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+            <a href="#" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
+            <a href="#" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
+            <a href="#" class="nav-link"><i class="bi bi-bag-check me-2"></i> Orders</a>
+            <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
+            <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
+            <hr class="text-white-50 mx-3">
+            <a href="logout.php" class="nav-link text-danger fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a>
         </div>
     </div>
 
-    <!-- Mobile Offcanvas -->
     <div class="offcanvas offcanvas-start d-lg-none" id="mobileSidebar" tabindex="-1" style="background:#1e2937; color:white; width:270px;">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title fw-bold">AdminHub</h5>
@@ -58,35 +98,33 @@ git<!DOCTYPE html>
         </div>
         <div class="offcanvas-body p-0">
             <div class="nav flex-column">
-                <a href="index.html" class="nav-link px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
-                <a href="user.html" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
-                <a href="products.html" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
-                <a href="orders.html" class="nav-link active px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
-                <a href="report.html" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
-                <a href="settings.html" class="nav-link px-4 py-3"><i class="bi bi-gear me-3"></i> Settings</a>
+                <a href="index.php" class="nav-link active px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
+                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
+                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
+                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
+                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
+                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-gear me-3"></i> Settings</a>
+                <a href="log.php" class="nav-link text-danger fw-semibold px-4 py-3"><i class="bi bi-box-arrow-right me-3"></i> Log Out</a>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
-        <!-- Dashboard Page -->
         <div id="dashboard-page">
-            <!-- Welcome Header -->
+            
             <div class="welcome-header">
-                <h2 class="fw-bold mb-1">Good afternoon, John! 👋</h2>
+                <h2 class="fw-bold mb-1"><?php echo $greeting . ", " . htmlspecialchars($_SESSION['admin_name']); ?>! 👋</h2>
                 <p class="mb-0 opacity-90">Here's what's happening with your platform today.</p>
             </div>
 
-            <!-- Stat Cards -->
             <div class="row g-4 mb-5">
                 <div class="col-xl-3 col-md-6">
                     <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
                         <div class="card-body">
-                            <i class="bi bi-people-fill fs-1 mb-3"></i>
-                            <h5>Total Users</h5>
-                            <h2 class="fw-bold">1,284</h2>
-                            <small class="opacity-90">↑ 12% from last month</small>
+                            <i class="bi bi-shield-lock-fill fs-1 mb-3"></i>
+                            <h5>Total Admins</h5>
+                            <h2 class="fw-bold"><?php echo $total_admins; ?></h2>
+                            <small class="opacity-90">Connected rows in database</small>
                         </div>
                     </div>
                 </div>
@@ -104,9 +142,9 @@ git<!DOCTYPE html>
                     <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                         <div class="card-body">
                             <i class="bi bi-activity fs-1 mb-3"></i>
-                            <h5>Active Users</h5>
-                            <h2 class="fw-bold">873</h2>
-                            <small class="opacity-90">Right now</small>
+                            <h5>Active Sessions</h5>
+                            <h2 class="fw-bold">1</h2>
+                            <small class="opacity-90">Your current login session</small>
                         </div>
                     </div>
                 </div>
@@ -122,17 +160,20 @@ git<!DOCTYPE html>
                 </div>
             </div>
 
-            <!-- Recent Activity + Quick Actions -->
             <div class="row g-4">
                 <div class="col-lg-7">
                     <div class="card">
                         <div class="card-header bg-white fw-bold py-3">Recent Activity</div>
                         <div class="card-body p-0">
                             <div class="list-group list-group-flush">
-                                <div class="list-group-item">John Doe logged in <span class="text-muted float-end">2 mins ago</span></div>
-                                <div class="list-group-item">Sarah updated her profile <span class="text-muted float-end">18 mins ago</span></div>
-                                <div class="list-group-item">New order #3921 placed <span class="text-muted float-end">1 hour ago</span></div>
-                                <div class="list-group-item">Michael added a new product <span class="text-muted float-end">3 hours ago</span></div>
+                                <div class="list-group-item">
+                                    <i class="bi bi-circle-fill text-success small me-2"></i>
+                                    <strong><?php echo htmlspecialchars($_SESSION['admis_name']); ?></strong> verified via database security layer.
+                                    <span class="text-muted float-end small">Just now</span>
+                                </div>
+                                <div class="list-group-item">Sarah updated her profile <span class="text-muted float-end small">18 mins ago</span></div>
+                                <div class="list-group-item">New order #3921 placed <span class="text-muted float-end small">1 hour ago</span></div>
+                                <div class="list-group-item">Michael added a new product <span class="text-muted float-end small">3 hours ago</span></div>
                             </div>
                         </div>
                     </div>
@@ -160,7 +201,6 @@ git<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- Sticky Footer -->
     <footer>
         <div class="container">
             <div class="row">
@@ -172,8 +212,8 @@ git<!DOCTYPE html>
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h6 class="fw-bold">Navigation</h6>
                     <ul class="list-unstyled">
-                        <li><a href="index.html" class="text-light-50">Dashboard</a></li>
-                        <li><a href="user.html" class="text-light-50">Users</a></li>
+                        <li><a href="index.php" class="text-light-50">Dashboard</a></li>
+                        <li><a href="#" class="text-light-50">Users</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
