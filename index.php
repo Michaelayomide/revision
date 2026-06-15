@@ -81,7 +81,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
     <div class="sidebar d-none d-lg-block">
         <div class="nav flex-column pt-3">
             <a href="index.php" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-            <a href="#" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
+            <a href="user.php" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
             <a href="#" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
             <a href="#" class="nav-link"><i class="bi bi-bag-check me-2"></i> Orders</a>
             <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
@@ -99,7 +99,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
         <div class="offcanvas-body p-0">
             <div class="nav flex-column">
                 <a href="index.php" class="nav-link active px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
-                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
+                <a href="user.php" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
                 <a href="#" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
                 <a href="#" class="nav-link px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
                 <a href="#" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
@@ -171,7 +171,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                                     <strong><?php echo htmlspecialchars($_SESSION['admis_name']); ?></strong> verified via database security layer.
                                     <span class="text-muted float-end small">Just now</span>
                                 </div>
-                                <div class="list-group-item">Sarah updated her profile <span class="text-muted float-end small">18 mins ago</span></div>
+                                <div class="list-group-item">Sarah updated her profile <strong><?php echo htmlspecialchars($admin_display_name); ?></strong> verified via database security layer.</div>
                                 <div class="list-group-item">New order #3921 placed <span class="text-muted float-end small">1 hour ago</span></div>
                                 <div class="list-group-item">Michael added a new product <span class="text-muted float-end small">3 hours ago</span></div>
                             </div>

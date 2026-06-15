@@ -40,7 +40,7 @@
     <div class="sidebar d-none d-lg-block">
         <div class="nav flex-column pt-3">
             <a href="index.html" class="nav-link"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-            <a href="user.html" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
+            <a href="user.php" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
             <a href="products.html" class="nav-link active"><i class="bi bi-box-seam me-2"></i> Products</a>
              <a href="orders.html" class="nav-link active"><i class="bi bi-bag-check me-2"></i> Orders</a>
             <a href="report.html" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
@@ -56,7 +56,7 @@
         <div class="offcanvas-body p-0">
             <div class="nav flex-column">
                 <a href="index.html" class="nav-link px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
-                <a href="user.html" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
+                <a href="user.php" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
                 <a href="products.html" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
                 <a href="orders.html" class="nav-link active px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
                 <a href="report.html" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
