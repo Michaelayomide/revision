@@ -42,8 +42,7 @@ session_start();
                     <h2 class="fw-bold mb-1" style="letter-spacing: -0.5px; color: #1e293b;">Create Account</h2>
                     <p class="text-muted" style="font-size: 0.9rem;">Set up your specialized dashboard credential entry parameters below.</p>
                 </div>
-
-              <form method="POST" action="backend/val.php">
+<form action="../backend/val.php" method="POST">
     
     <?php if (isset($_SESSION['auth_errors'])): ?>
         <div class="alert alert-danger py-2 mb-3" style="font-size: 0.9rem; border-radius: 10px;">

@@ -177,7 +177,7 @@ if ($db && empty($error_msg)) {
             <h5 class="offcanvas-title fw-bold">AdminHub</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body p-0">
+        <div class="offcanvas-body p-5">
             <div class="nav flex-column">
                 <a href="index.php" class="nav-link px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
                 <a href="user.php" class="nav-link active px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>

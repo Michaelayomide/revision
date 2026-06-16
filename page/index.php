@@ -1,40 +1,59 @@
 <?php
 session_start();
 
-// 1. SECURITY SHIELD
+// 1. CENTRALIZED DATABASE CONNECTION
+require_once '../backend/db.php';
+
+// 2. SECURITY SHIELD
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-// Create a safe fallback for the admin name if the session key is spelled differently
-$admin_display_name = $_SESSION['admin_name'] ?? $_SESSION['username'] ?? $_SESSION['email'] ?? 'Admin';
+$admin_display_name = $_SESSION['admin_name'] ?? 'Admin';
 
-// 2. INACTIVITY TIMEOUT (15 minutes)
+// 3. INACTIVITY TIMEOUT (15 minutes)
 $max_idle_time = 900; 
 if (isset($_SESSION['last_activity'])) {
     $idle_duration = time() - $_SESSION['last_activity'];
     if ($idle_duration > $max_idle_time) {
-        header("Location: logout.php?reason=timeout");
+        session_unset();
+        session_destroy();
+        header("Location: login.php?error=Session+expired+due+to+inactivity.+Please+sign+in+again.");
         exit();
     }
 }
 $_SESSION['last_activity'] = time();
 
-// 3. ROBUST DATABASE CONNECTOR
+// Universal database connection handler safeguard
+$database = $db ?? $pdo;
+
+// 4. FETCH LIVE METRICS (Dynamically pulls from all tables)
 try {
-    // Double check your exact local database name here
-    $db = new PDO("mysql:host=localhost;dbname=your_database_name;charset=utf8", "root", "");
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // If your table is spelled 'admins' change it below
-    $query = $db->query("SELECT COUNT(*) FROM admis"); 
+    // Count Admins
+    $query = $database->query("SELECT COUNT(*) FROM admins"); 
     $total_admins = $query->fetchColumn();
+    
+    // Count Users
+    $user_query = $database->query("SELECT COUNT(*) FROM users");
+    $total_users = $user_query ? $user_query->fetchColumn() : 0;
+
+    // Count Total Unique Products
+    $product_query = $database->query("SELECT COUNT(*) FROM products");
+    $total_products = $product_query ? $product_query->fetchColumn() : 0;
+
+    // Count Active Pending Orders requiring review
+    $order_query = $database->query("SELECT COUNT(*) FROM orders WHERE status = 'Pending'");
+    $pending_orders = $order_query ? $order_query->fetchColumn() : 0;
+
 } catch (PDOException $e) {
-    $total_admins = "0"; // Displays 0 instead of leaving a blank space if connection drops
+    $total_admins = "0"; 
+    $total_users = "0";
+    $total_products = "0";
+    $pending_orders = "0";
 }
 
-// 4. TIME-BASED GREETING
+// 5. TIME-BASED GREETING
 date_default_timezone_set('Africa/Lagos'); 
 $hour = date('H');
 $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "Good evening");
@@ -70,7 +89,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                 <div class="d-flex align-items-center gap-2 text-white">
                     <img src="https://via.placeholder.com/40" class="rounded-circle" alt="Avatar">
                     <div class="d-none d-sm-block">
-                        <small class="fw-bold"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></small><br>
+                        <small class="fw-bold"><?php echo htmlspecialchars($admin_display_name); ?></small><br>
                         <small class="text-success">● Online</small>
                     </div>
                 </div>
@@ -82,8 +101,9 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
         <div class="nav flex-column pt-3">
             <a href="index.php" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
             <a href="user.php" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
-            <a href="#" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
-            <a href="#" class="nav-link"><i class="bi bi-bag-check me-2"></i> Orders</a>
+            <a href="products.php" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
+            <a href="orders.php" class="nav-link"><i class="bi bi-bag-check me-2"></i> Orders</a>
+            <a href="stock.php" class="nav-link"><i class="bi bi-boxes me-2"></i> Stock</a>
             <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
             <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
             <hr class="text-white-50 mx-3">
@@ -100,11 +120,12 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
             <div class="nav flex-column">
                 <a href="index.php" class="nav-link active px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
                 <a href="user.php" class="nav-link px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
-                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
-                <a href="#" class="nav-link px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
+                <a href="products.php" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
+                <a href="orders.php" class="nav-link px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
+                <a href="stock.php" class="nav-link px-4 py-3"><i class="bi bi-boxes me-3"></i> Stock</a>
                 <a href="#" class="nav-link px-4 py-3"><i class="bi bi-graph-up me-3"></i> Reports</a>
                 <a href="#" class="nav-link px-4 py-3"><i class="bi bi-gear me-3"></i> Settings</a>
-                <a href="log.php" class="nav-link text-danger fw-semibold px-4 py-3"><i class="bi bi-box-arrow-right me-3"></i> Log Out</a>
+                <a href="logout.php" class="nav-link text-danger fw-semibold px-4 py-3"><i class="bi bi-box-arrow-right me-3"></i> Log Out</a>
             </div>
         </div>
     </div>
@@ -113,7 +134,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
         <div id="dashboard-page">
             
             <div class="welcome-header">
-                <h2 class="fw-bold mb-1"><?php echo $greeting . ", " . htmlspecialchars($_SESSION['admin_name']); ?>! 👋</h2>
+                <h2 class="fw-bold mb-1"><?php echo $greeting . ", " . htmlspecialchars($admin_display_name); ?>! 👋</h2>
                 <p class="mb-0 opacity-90">Here's what's happening with your platform today.</p>
             </div>
 
@@ -124,27 +145,27 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                             <i class="bi bi-shield-lock-fill fs-1 mb-3"></i>
                             <h5>Total Admins</h5>
                             <h2 class="fw-bold"><?php echo $total_admins; ?></h2>
-                            <small class="opacity-90">Connected rows in database</small>
+                            <small class="opacity-90">Active administrative records</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #10b981, #059669);">
                         <div class="card-body">
-                            <i class="bi bi-currency-dollar fs-1 mb-3"></i>
-                            <h5>Revenue</h5>
-                            <h2 class="fw-bold">$24,590</h2>
-                            <small class="opacity-90">↑ 8% from last month</small>
+                            <i class="bi bi-people-fill fs-1 mb-3"></i>
+                            <h5>Registered Users</h5>
+                            <h2 class="fw-bold"><?php echo $total_users; ?></h2>
+                            <small class="opacity-90">Total active app members</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                         <div class="card-body">
-                            <i class="bi bi-activity fs-1 mb-3"></i>
-                            <h5>Active Sessions</h5>
-                            <h2 class="fw-bold">1</h2>
-                            <small class="opacity-90">Your current login session</small>
+                            <i class="bi bi-box-seam-fill fs-1 mb-3"></i>
+                            <h5>Total Products</h5>
+                            <h2 class="fw-bold"><?php echo $total_products; ?></h2>
+                            <small class="opacity-90">Unique items listed in catalog</small>
                         </div>
                     </div>
                 </div>
@@ -152,9 +173,9 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                     <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
                         <div class="card-body">
                             <i class="bi bi-exclamation-triangle fs-1 mb-3"></i>
-                            <h5>Pending Tasks</h5>
-                            <h2 class="fw-bold">14</h2>
-                            <small class="opacity-90">Requires attention</small>
+                            <h5>Pending Orders</h5>
+                            <h2 class="fw-bold"><?php echo $pending_orders; ?></h2>
+                            <small class="opacity-90">Requires immediate fulfillment</small>
                         </div>
                     </div>
                 </div>
@@ -162,18 +183,20 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
 
             <div class="row g-4">
                 <div class="col-lg-7">
-                    <div class="card">
-                        <div class="card-header bg-white fw-bold py-3">Recent Activity</div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white fw-bold py-3 border-bottom">Recent Activity Log</div>
                         <div class="card-body p-0">
                             <div class="list-group list-group-flush">
-                                <div class="list-group-item">
+                                <div class="list-group-item py-3">
                                     <i class="bi bi-circle-fill text-success small me-2"></i>
-                                    <strong><?php echo htmlspecialchars($_SESSION['admis_name']); ?></strong> verified via database security layer.
+                                    <strong><?php echo htmlspecialchars($admin_display_name); ?></strong> securely verified via authentication check.
                                     <span class="text-muted float-end small">Just now</span>
                                 </div>
-                                <div class="list-group-item">Sarah updated her profile <strong><?php echo htmlspecialchars($admin_display_name); ?></strong> verified via database security layer.</div>
-                                <div class="list-group-item">New order #3921 placed <span class="text-muted float-end small">1 hour ago</span></div>
-                                <div class="list-group-item">Michael added a new product <span class="text-muted float-end small">3 hours ago</span></div>
+                                <div class="list-group-item py-3">
+                                    <i class="bi bi-circle-fill text-primary small me-2"></i>
+                                    System tracking infrastructure connected to database successfully.
+                                    <span class="text-muted float-end small">10 mins ago</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -184,20 +207,21 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                         <div class="card-header bg-white fw-bold py-3">Quick Actions</div>
                         <div class="card-body">
                             <div class="d-grid gap-3">
-                                <button class="btn btn-primary btn-lg" onclick="addUser()">
-                                    <i class="bi bi-person-plus me-2"></i> Add New User
-                                </button>
+                                <a href="user.php" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-person me-2"></i> Add new user
+                                </a>
                                 <button class="btn btn-outline-success btn-lg">
                                     <i class="bi bi-file-earmark-bar-graph me-2"></i> Generate Report
                                 </button>
-                                <button class="btn btn-outline-info btn-lg">
+                                <a href="products.php" class="btn btn-outline-info btn-lg">
                                     <i class="bi bi-box-seam me-2"></i> Manage Products
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -213,7 +237,7 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
                     <h6 class="fw-bold">Navigation</h6>
                     <ul class="list-unstyled">
                         <li><a href="index.php" class="text-light-50">Dashboard</a></li>
-                        <li><a href="#" class="text-light-50">Users</a></li>
+                        <li><a href="user.php" class="text-light-50">Users</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
@@ -236,10 +260,5 @@ $greeting = ($hour < 12) ? "Good morning" : (($hour < 17) ? "Good afternoon" : "
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function addUser() {
-            alert("Add New User modal will open here.");
-        }
-    </script>
 </body>
 </html>

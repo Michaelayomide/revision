@@ -4,7 +4,7 @@ session_start();
 
 // If an admin is ALREADY logged in, send them straight to the dashboard
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-    header("Location: index.php");
+header("Location: ../page/index.php");
     exit();
 }
 ?>
@@ -50,10 +50,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                     <p class="text-muted" style="font-size: 0.95rem;">Enter your verified credentials to access management panels.</p>
                 </div>
 
-                <form method="POST" action="backend/val.php">
+              <form action="../backend/val.php" method="POST">
 
                     <?php if (isset($_GET['reason']) && $_GET['reason'] === 'timeout'): ?>
-    <div class="alert alert-warning py-2 mb-3 small d-flex align-items-center" style="border-radius: 10px; color: #856404; background-color: #fff3cd; border-color: #ffeeba;">
+                      <div class="alert alert-warning py-2 mb-3 small d-flex align-items-center" style="border-radius: 10px; color: #856404; background-color: #fff3cd; border-color: #ffeeba;">
         <i class="fa-solid fa-triangle-exclamation me-2 fs-6"></i>
         <div>For your security, you were logged out due to inactivity.</div>
     </div>
@@ -104,7 +104,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                             <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
                             <label class="form-check-label text-muted" for="rememberMe">Remember this device</label>
                         </div>
-                        <a href="#" class="text-link-green">Forgot Password?</a>
+                        <a href="forgot-password.php" class="text-link-green">Forgot Password?</a>
                     </div>
 
                     <button type="submit" name="login_submit" class="btn btn-success btn-submit-action w-100 text-white shadow-sm mb-3">
