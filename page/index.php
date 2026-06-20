@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once '../backend/auth_check.php';
 
 // 1. CENTRALIZED DATABASE CONNECTION
 require_once '../backend/db.php';
