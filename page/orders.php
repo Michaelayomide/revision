@@ -1,188 +1,303 @@
 <?php
-session_start();
-require_once '../backend/db.php';
+require_once __DIR__ . '/../config/init.php';
+require_admin();
 
-// 1. SECURITY SHIELD
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header("Location: login.php");
-    exit();
-}
+$pageTitle = 'Orders';
+$orderStatuses = ['Pending', 'Processing', 'Completed', 'Cancelled'];
+$shippingStatuses = ['Processing', 'Packed', 'Shipped', 'Delivered', 'Returned'];
 
-$admin_display_name = $_SESSION['admin_name'] ?? 'Admin';
-$success_msg = "";
-$error_msg = "";
-
-// 2. IMPORT SYSTEM DATABASE LINK
-require_once '../backend/db.php';
-
-// 3. ORDER STATUS & DELETION ACTION CONTROLLER
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-
-    if ($action === 'update_status') {
-        $order_id = intval($_POST['order_id'] ?? 0);
-        $new_status = $_POST['status'] ?? 'Pending';
-
-        try {
-            $stmt = $db->prepare("UPDATE orders SET status = ? WHERE id = ?");
-            $stmt->execute([$new_status, $order_id]);
-            $success_msg = "Order status updated to tracking metric: **$new_status**.";
-        } catch (PDOException $e) {
-            $error_msg = "Status optimization failure: " . $e->getMessage();
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        flash('danger', 'Security token expired. Please try again.');
+        redirect_to('orders.php');
     }
 
-    if ($action === 'delete') {
-        $order_id = intval($_POST['order_id'] ?? 0);
-        try {
-            $stmt = $db->prepare("DELETE FROM orders WHERE id = ?");
-            $stmt->execute([$order_id]);
-            $success_msg = "Order trace fully dropped from history tracking.";
-        } catch (PDOException $e) {
-            $error_msg = "Order dropping exception: " . $e->getMessage();
+    $action = $_POST['action'] ?? '';
+
+    try {
+        if ($action === 'create_order') {
+            $customerName = trim($_POST['customer_name'] ?? '');
+            $productId = (int) ($_POST['product_id'] ?? 0);
+            $quantity = max(1, (int) ($_POST['quantity'] ?? 1));
+
+            if ($customerName === '' || $productId <= 0) {
+                flash('danger', 'Customer name and product selection are required.');
+                redirect_to('orders.php');
+            }
+
+            $database->beginTransaction();
+
+            $stmt = $database->prepare('SELECT id, name, price, stock_quantity FROM products WHERE id = :id FOR UPDATE');
+            $stmt->execute(['id' => $productId]);
+            $product = $stmt->fetch();
+
+            if (!$product) {
+                $database->rollBack();
+                flash('danger', 'Selected product was not found.');
+                redirect_to('orders.php');
+            }
+
+            if ((int) $product['stock_quantity'] < $quantity) {
+                $database->rollBack();
+                flash('danger', 'Insufficient stock for ' . $product['name'] . '.');
+                redirect_to('orders.php');
+            }
+
+            $unitPrice = (float) $product['price'];
+            $totalAmount = $unitPrice * $quantity;
+            $txnId = 'TR-' . date('YmdHis') . '-' . random_int(100, 999);
+
+            $orderStmt = $database->prepare(
+                "INSERT INTO orders (txn_id, customer_name, total_amount, order_status, shipping_status)
+                 VALUES (:txn_id, :customer_name, :total_amount, 'Pending', 'Processing')"
+            );
+            $orderStmt->execute([
+                'txn_id' => $txnId,
+                'customer_name' => $customerName,
+                'total_amount' => $totalAmount,
+            ]);
+
+            $orderId = (int) $database->lastInsertId();
+
+            $itemStmt = $database->prepare(
+                "INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+                 VALUES (:order_id, :product_id, :quantity, :unit_price)"
+            );
+            $itemStmt->execute([
+                'order_id' => $orderId,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+            ]);
+
+            $newStock = (int) $product['stock_quantity'] - $quantity;
+            $newProductStatus = $newStock === 0 ? 'Out of Stock' : 'Active';
+            $stockStmt = $database->prepare(
+                "UPDATE products
+                 SET stock_quantity = :stock_quantity, status = :status
+                 WHERE id = :id"
+            );
+            $stockStmt->execute([
+                'stock_quantity' => $newStock,
+                'status' => $newProductStatus,
+                'id' => $productId,
+            ]);
+
+            $database->commit();
+            flash('success', 'Order created and inventory updated.');
+        } elseif ($action === 'update_status') {
+            $orderId = (int) ($_POST['order_id'] ?? 0);
+            $orderStatus = $_POST['order_status'] ?? 'Pending';
+            $shippingStatus = $_POST['shipping_status'] ?? 'Processing';
+
+            if ($orderId <= 0 || !in_array($orderStatus, $orderStatuses, true) || !in_array($shippingStatus, $shippingStatuses, true)) {
+                flash('danger', 'Invalid order status update.');
+                redirect_to('orders.php');
+            }
+
+            $stmt = $database->prepare(
+                "UPDATE orders
+                 SET order_status = :order_status, shipping_status = :shipping_status
+                 WHERE id = :id"
+            );
+            $stmt->execute([
+                'order_status' => $orderStatus,
+                'shipping_status' => $shippingStatus,
+                'id' => $orderId,
+            ]);
+            flash('success', 'Order status updated.');
+        } elseif ($action === 'delete') {
+            $orderId = (int) ($_POST['order_id'] ?? 0);
+            if ($orderId <= 0) {
+                flash('danger', 'Invalid order selected.');
+                redirect_to('orders.php');
+            }
+
+            $database->beginTransaction();
+            $stmt = $database->prepare('DELETE FROM order_items WHERE order_id = :order_id');
+            $stmt->execute(['order_id' => $orderId]);
+            $stmt = $database->prepare('DELETE FROM orders WHERE id = :id');
+            $stmt->execute(['id' => $orderId]);
+            $database->commit();
+            flash('success', 'Order deleted.');
         }
+    } catch (PDOException $e) {
+        if ($database->inTransaction()) {
+            $database->rollBack();
+        }
+        flash('danger', 'Order operation failed.');
     }
+
+    redirect_to('orders.php');
 }
 
-// 4. FETCH ENRICHED ORDERS DATA (With relational Product names)
+$products = [];
 $orders = [];
-try {
-    $stmt = $db->query("SELECT o.id, o.customer_name, o.quantity, o.total_price, o.status, o.order_date, p.product_name 
-                        FROM orders o 
-                        LEFT JOIN products p ON o.product_id = p.id 
-                        ORDER BY o.id DESC");
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $error_msg = "Data pipeline read error: " . $e->getMessage();
-}
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdminHub - Orders Control</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+$loadError = '';
 
-    <nav class="navbar navbar-dark fixed-top py-3 shadow-sm">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler me-3 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <a class="navbar-brand fw-bold fs-3" href="index.php">AdminHub</a>
+try {
+    $stmt = $database->prepare(
+        "SELECT id, name, sku, price, stock_quantity
+         FROM products
+         WHERE status = 'Active' AND stock_quantity > 0
+         ORDER BY name ASC"
+    );
+    $stmt->execute();
+    $products = $stmt->fetchAll();
+
+    $stmt = $database->prepare(
+        "SELECT
+            o.id,
+            o.txn_id,
+            o.customer_name,
+            o.total_amount,
+            o.order_status,
+            o.shipping_status,
+            o.created_at,
+            GROUP_CONCAT(CONCAT(COALESCE(p.name, 'Deleted Product'), ' x', oi.quantity) ORDER BY oi.id SEPARATOR ', ') AS items
+         FROM orders o
+         LEFT JOIN order_items oi ON oi.order_id = o.id
+         LEFT JOIN products p ON p.id = oi.product_id
+         GROUP BY o.id, o.txn_id, o.customer_name, o.total_amount, o.order_status, o.shipping_status, o.created_at
+         ORDER BY o.created_at DESC, o.id DESC"
+    );
+    $stmt->execute();
+    $orders = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $loadError = 'Orders could not be loaded. Install or migrate the orders and order_items schema.';
+}
+
+$flashMessages = consume_flash_messages();
+
+include __DIR__ . '/../components/header.php';
+include __DIR__ . '/../components/navbar.php';
+include __DIR__ . '/../components/sidebar.php';
+?>
+
+<main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold text-primary mb-0">Orders</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderModal">
+            <i class="bi bi-plus-lg me-2"></i> New Order
+        </button>
+    </div>
+
+    <?php foreach ($flashMessages as $message): ?>
+        <div class="alert alert-<?php echo e($message['type']); ?> alert-dismissible fade show shadow-sm">
+            <?php echo e($message['message']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endforeach; ?>
+
+    <?php if ($loadError !== ''): ?>
+        <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
+    <?php endif; ?>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Txn ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Order Status</th>
+                            <th>Shipping</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($orders): ?>
+                            <?php foreach ($orders as $order): ?>
+                                <tr>
+                                    <td class="fw-semibold"><?php echo e($order['txn_id']); ?></td>
+                                    <td><?php echo e($order['customer_name']); ?></td>
+                                    <td><?php echo e($order['items'] ?? 'No items'); ?></td>
+                                    <td><?php echo e(money($order['total_amount'])); ?></td>
+                                    <td><span class="badge bg-secondary"><?php echo e($order['order_status']); ?></span></td>
+                                    <td><span class="badge bg-info"><?php echo e($order['shipping_status']); ?></span></td>
+                                    <td class="small text-muted"><?php echo e(date('M d, Y H:i', strtotime($order['created_at']))); ?></td>
+                                    <td>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <form method="POST" class="d-inline-flex gap-2">
+                                                <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="update_status">
+                                                <input type="hidden" name="order_id" value="<?php echo e($order['id']); ?>">
+                                                <select name="order_status" class="form-select form-select-sm">
+                                                    <?php foreach ($orderStatuses as $status): ?>
+                                                        <option value="<?php echo e($status); ?>" <?php echo $order['order_status'] === $status ? 'selected' : ''; ?>><?php echo e($status); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <select name="shipping_status" class="form-select form-select-sm">
+                                                    <?php foreach ($shippingStatuses as $status): ?>
+                                                        <option value="<?php echo e($status); ?>" <?php echo $order['shipping_status'] === $status ? 'selected' : ''; ?>><?php echo e($status); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                                            </form>
+                                            <form method="POST" onsubmit="return confirm('Delete this order record?');">
+                                                <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="order_id" value="<?php echo e($order['id']); ?>">
+                                                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">No orders captured yet.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-            <div class="mx-auto d-none d-md-block" style="width: 300px;">
-                <input type="text" class="form-control" placeholder="Search orders...">
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center gap-2 text-white">
-                    <img src="https://via.placeholder.com/40" class="rounded-circle" alt="Avatar">
-                    <div class="d-none d-sm-block">
-                        <small class="fw-bold"><?php echo htmlspecialchars($admin_display_name); ?></small><br>
-                        <small class="text-success">● Online</small>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                <input type="hidden" name="action" value="create_order">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="customerName">Customer Name</label>
+                        <input type="text" class="form-control" name="customer_name" id="customerName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="productId">Product</label>
+                        <select class="form-select" name="product_id" id="productId" required>
+                            <option value="">Select a product</option>
+                            <?php foreach ($products as $product): ?>
+                                <option value="<?php echo e($product['id']); ?>">
+                                    <?php echo e($product['name'] . ' [' . $product['sku'] . '] - ' . money($product['price']) . ' / ' . $product['stock_quantity'] . ' in stock'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="quantity">Quantity</label>
+                        <input type="number" min="1" class="form-control" name="quantity" id="quantity" value="1" required>
                     </div>
                 </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="sidebar d-none d-lg-block">
-        <div class="nav flex-column pt-3">
-            <a href="index.php" class="nav-link"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-            <a href="user.php" class="nav-link"><i class="bi bi-people me-2"></i> Users</a>
-            <a href="products.php" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
-            <a href="orders.php" class="nav-link active"><i class="bi bi-bag-check me-2"></i> Orders</a>
-            <a href="reports.php" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
-            <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
-            <hr class="text-white-50 mx-3">
-            <a href="logout.php" class="nav-link text-danger fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <h1 class="fw-bold text-primary mb-4">Incoming Client Orders</h1>
-
-        <?php if(!empty($success_msg)): ?>
-            <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm"><?php echo $success_msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        <?php endif; ?>
-        <?php if(!empty($error_msg)): ?>
-            <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm"><?php echo $error_msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        <?php endif; ?>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Product Item</th>
-                                <th>Qty</th>
-                                <th>Gross Total</th>
-                                <th>Status</th>
-                                <th>Date Placed</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(!empty($orders)): foreach($orders as $ord): ?>
-                            <tr>
-                                <td class="fw-bold">#ORD-<?php echo $ord['id']; ?></td>
-                                <td class="fw-medium"><?php echo htmlspecialchars($ord['customer_name']); ?></td>
-                                <td><?php echo htmlspecialchars($ord['product_name'] ?? 'Deleted Product Item'); ?></td>
-                                <td><?php echo $ord['quantity']; ?>x</td>
-                                <td class="fw-bold text-primary">$<?php echo number_format($ord['total_price'], 2); ?></td>
-                                <td>
-                                    <?php
-                                        $badge_map = ['Pending'=>'bg-warning text-dark', 'Processing'=>'bg-info text-white', 'Completed'=>'bg-success text-white', 'Cancelled'=>'bg-danger text-white'];
-                                        $badge_style = $badge_map[$ord['status']] ?? 'bg-secondary';
-                                    ?>
-                                    <span class="badge <?php echo $badge_style; ?>"><?php echo $ord['status']; ?></span>
-                                </td>
-                                <td class="small text-muted"><?php echo date('M d, Y H:i', strtotime($ord['order_date'])); ?></td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <form action="" method="POST" class="d-inline-flex gap-1">
-                                            <input type="hidden" name="action" value="update_status">
-                                            <input type="hidden" name="order_id" value="<?php echo $ord['id']; ?>">
-                                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                <option value="Pending" <?php if($ord['status'] === 'Pending') echo 'selected'; ?>>Pending</option>
-                                                <option value="Processing" <?php if($ord['status'] === 'Processing') echo 'selected'; ?>>Processing</option>
-                                                <option value="Completed" <?php if($ord['status'] === 'Completed') echo 'selected'; ?>>Completed</option>
-                                                <option value="Cancelled" <?php if($ord['status'] === 'Cancelled') echo 'selected'; ?>>Cancelled</option>
-                                            </select>
-                                        </form>
-                                        
-                                        <form action="" method="POST" onsubmit="return confirm('Archive order entry permanently?');" class="d-inline">
-                                            <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="order_id" value="<?php echo $ord['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; else: ?>
-                            <tr><td colspan="8" class="text-center py-5 text-muted">No transactional order parameters captured.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <footer class="mt-5 py-4 bg-dark text-white-50">
-        <div class="container-fluid px-4 text-center text-md-start">
-            <p class="small mb-0">&copy; 2026 AdminHub. System tracking operational grid complete.</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include __DIR__ . '/../components/footer.php'; ?>

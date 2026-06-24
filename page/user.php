@@ -136,30 +136,7 @@ if ($db && empty($error_msg)) {
 </head>
 <body>
 
-    <nav class="navbar navbar-dark fixed-top py-3 shadow-sm">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler me-3 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <a class="navbar-brand fw-bold fs-3" href="index.php">AdminHub</a>
-            </div>
-            
-            <div class="mx-auto d-none d-md-block" style="width: 300px;">
-                <input type="text" class="form-control" placeholder="Search anything...">
-            </div>
-            
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center gap-2 text-white">
-                    <img src="https://via.placeholder.com/40" class="rounded-circle" alt="Avatar">
-                    <div class="d-none d-sm-block">
-                        <small class="fw-bold"><?php echo htmlspecialchars($admin_display_name); ?></small><br>
-                        <small class="text-success">● Online</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php include_once 'components_navbar.php'; ?>
 
     <div class="sidebar d-none d-lg-block">
         <div class="nav flex-column pt-3">
@@ -178,13 +155,17 @@ if ($db && empty($error_msg)) {
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body p-5">
-            <div class="nav flex-column">
-                <a href="index.php" class="nav-link px-4 py-3"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
-                <a href="user.php" class="nav-link active px-4 py-3"><i class="bi bi-people me-3"></i> Users</a>
-                <a href="products.php" class="nav-link px-4 py-3"><i class="bi bi-box-seam me-3"></i> Products</a>
-                <a href="orders.php" class="nav-link px-4 py-3"><i class="bi bi-bag-check me-3"></i> Orders</a>
-                <a href="logout.php" class="nav-link text-danger fw-semibold px-4 py-3"><i class="bi bi-box-arrow-right me-3"></i> Log Out</a>
-            </div>
+              <div class="nav flex-column pt-3">
+            <a href="index.php" class="nav-link "><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+            <a href="user.php" class="nav-link active"><i class="bi bi-people me-2"></i> Users</a>
+            <a href="products.php" class="nav-link"><i class="bi bi-box-seam me-2"></i> Products</a>
+            <a href="orders.php" class="nav-link"><i class="bi bi-bag-check me-2"></i> Orders</a>
+            <a href="stock.php" class="nav-link"><i class="bi bi-boxes me-2"></i> Stock</a>
+            <a href="reports.php" class="nav-link"><i class="bi bi-graph-up me-2"></i> Reports</a>
+            <a href="settings.php" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
+            <hr class="text-white-50 mx-3">
+            <a href="logout.php" class="nav-link text-danger fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a>
+        </div>
         </div>
     </div>
 
