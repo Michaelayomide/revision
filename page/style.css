@@ -93,6 +93,21 @@ body {
     margin-bottom: 30px;
 }
 
+.card,
+.modal-content,
+.list-group-item {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+.card-header,
+.card-footer,
+.table-light {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
 /* Stat Cards */
 .stat-card {
     border: none;
@@ -367,16 +382,48 @@ td.text-nowrap {
 
 
 /* Dark Mode */
-[data-theme="dark"] {
-    --light: #1e2937;
+[data-theme="dark"],
+.dark-theme {
+    --light: #0f172a;
     --dark: #0f172a;
+    --surface: #1e2937;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
     background: #0f172a;
     color: #e2e8f0;
 }
 
 [data-theme="dark"] .card,
-[data-theme="dark"] .table-light {
-    background: #1e2937;
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .list-group-item,
+.dark-theme .card,
+.dark-theme .modal-content,
+.dark-theme .list-group-item {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .table,
+.dark-theme .table {
+    --bs-table-bg: var(--surface);
+    --bs-table-color: var(--text);
+    --bs-table-border-color: var(--border);
+    color: var(--text);
+}
+
+[data-theme="dark"] .text-muted,
+.dark-theme .text-muted {
+    color: var(--muted) !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+.dark-theme .form-control,
+.dark-theme .form-select {
+    background-color: #0f172a !important;
+    border-color: var(--border) !important;
     color: #e2e8f0;
 }
 
