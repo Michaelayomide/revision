@@ -45,7 +45,7 @@ try {
             COALESCE(SUM(o.total_amount), 0) AS total_revenue,
             COUNT(*) AS total_orders,
             COALESCE(AVG(o.total_amount), 0) AS avg_order_value,
-            SUM(CASE WHEN o.shipping_status <> 'Delivered' AND o.order_status <> 'Cancelled' THEN 1 ELSE 0 END) AS pending_shipments
+            COALESCE(SUM(CASE WHEN o.shipping_status <> 'Delivered' AND o.order_status <> 'Cancelled' THEN 1 ELSE 0 END), 0) AS pending_shipments
          FROM orders o
          {$whereSql}"
     );

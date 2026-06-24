@@ -82,8 +82,8 @@ try {
         "SELECT
             COALESCE(SUM(price * stock_quantity), 0) AS stock_value,
             COALESCE(SUM(stock_quantity), 0) AS stock_units,
-            SUM(CASE WHEN stock_quantity > 0 AND stock_quantity <= 10 THEN 1 ELSE 0 END) AS low_stock,
-            SUM(CASE WHEN stock_quantity = 0 THEN 1 ELSE 0 END) AS out_of_stock
+            COALESCE(SUM(CASE WHEN stock_quantity > 0 AND stock_quantity <= 10 THEN 1 ELSE 0 END), 0) AS low_stock,
+            COALESCE(SUM(CASE WHEN stock_quantity = 0 THEN 1 ELSE 0 END), 0) AS out_of_stock
          FROM products"
     );
     $stmt->execute();
