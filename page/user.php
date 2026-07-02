@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/init.php';
 require_admin();
+require_role('primary_admin', 'secondary_admin'); 
 
-$pageTitle = 'Users';
-$roles = ['Admin', 'Editor', 'User'];
-$statuses = ['Active', 'Inactive'];
+$pageTitle = 'User Management';
+$roles = ['primary_admin', 'secondary_admin', 'editor'];
+$statuses = ['Active', 'Suspended'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
@@ -14,124 +15,167 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = $_POST['action'] ?? '';
     $userId = (int) ($_POST['user_id'] ?? 0);
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $role = in_array($_POST['role'] ?? 'User', $roles, true) ? $_POST['role'] : 'User';
-    $status = in_array($_POST['status'] ?? 'Active', $statuses, true) ? $_POST['status'] : 'Active';
+    $role = $_POST['role'] ?? 'editor';
+    $status = $_POST['status'] ?? 'Active';
+    $role = in_array($role, $roles, true) ? $role : 'editor';
+    $status = in_array($status, $statuses, true) ? $status : 'Active';
 
     try {
-        if ($action === 'create') {
-            if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                flash('danger', 'A valid name and email address are required.');
+        // --- ACTION 1: UPDATE STAFF PERMISSIONS ---
+        if ($action === 'update_user') {
+            if ($userId <= 0) {
+                flash('danger', 'Invalid user parameters chosen.');
                 redirect_to('user.php');
             }
 
-            $stmt = $database->prepare('SELECT COUNT(*) FROM users WHERE email = :email');
+            // Core Security Guard: Prevent self-demotion or self-suspension
+            if ($userId === (int)($_SESSION['admin_id'] ?? 0)) {
+                flash('danger', 'You cannot alter your own admin privileges or account status.');
+                redirect_to('user.php');
+            }
+
+            // System Safety Guard: Protect primary root admins (ID 1 and ID 2) from being altered or suspended
+            if (in_array($userId, [1, 2], true)) {
+                flash('danger', 'Access Denied: Root administrator accounts (ID 1 & 2) cannot be modified or suspended.');
+                redirect_to('user.php');
+            }
+
+            // Fetch target user's current role to check access
+            $stmt = $database->prepare("SELECT role FROM admins WHERE id = :id LIMIT 1");
+            $stmt->execute(['id' => $userId]);
+            $targetUser = $stmt->fetch();
+
+            if (!$targetUser) {
+                flash('danger', 'User not found.');
+                redirect_to('user.php');
+            }
+
+            // Secondary Admin checks
+            if (is_secondary_admin()) {
+                if ($targetUser['role'] !== 'editor') {
+                    flash('danger', 'Access Denied: Secondary Admins can only modify Editors.');
+                    redirect_to('user.php');
+                }
+                if ($role !== 'editor') {
+                    flash('danger', 'Access Denied: Secondary Admins cannot promote/change roles to non-editor.');
+                    redirect_to('user.php');
+                }
+            }
+
+            $stmt = $database->prepare("UPDATE admins SET role = :role, status = :status WHERE id = :id");
+            $stmt->execute([
+                'role' => $role,
+                'status' => $status,
+                'id' => $userId
+            ]);
+            flash('success', 'User configurations modified successfully.');
+        }
+        
+        // --- ACTION 2: ADD NEW STAFF ---
+        elseif ($action === 'add_user') {
+            $fullname = trim($_POST['fullname'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($fullname) || empty($email) || empty($password)) {
+                flash('danger', 'All registration fields are required.');
+                redirect_to('user.php');
+            }
+
+            if (is_secondary_admin() && $role !== 'editor') {
+                flash('danger', 'Access Denied: Secondary Admins can only create Editors.');
+                redirect_to('user.php');
+            }
+
+            // Hash the password
+            $hashed = password_hash($password, PASSWORD_BCRYPT);
+
+            // Check if email already exists
+            $stmt = $database->prepare("SELECT id FROM admins WHERE email = :email LIMIT 1");
             $stmt->execute(['email' => $email]);
-            if ((int) $stmt->fetchColumn() > 0) {
-                flash('danger', 'A user with that email already exists.');
+            if ($stmt->fetch()) {
+                flash('danger', 'This email is already in use by another admin.');
                 redirect_to('user.php');
             }
 
-            $stmt = $database->prepare(
-                'INSERT INTO users (name, email, role, status) VALUES (:name, :email, :role, :status)'
-            );
+            $stmt = $database->prepare("INSERT INTO admins (fullname, email, password, role, status) VALUES (:fullname, :email, :password, :role, :status)");
             $stmt->execute([
-                'name' => $name,
+                'fullname' => $fullname,
                 'email' => $email,
+                'password' => $hashed,
                 'role' => $role,
-                'status' => $status,
+                'status' => $status
             ]);
-            flash('success', 'User created successfully.');
-        } elseif ($action === 'update') {
-            if ($userId <= 0 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                flash('danger', 'A valid user, name, and email address are required.');
-                redirect_to('user.php');
-            }
+            flash('success', 'Staff account created successfully.');
+        }
 
-            $stmt = $database->prepare('SELECT COUNT(*) FROM users WHERE email = :email AND id <> :id');
-            $stmt->execute(['email' => $email, 'id' => $userId]);
-            if ((int) $stmt->fetchColumn() > 0) {
-                flash('danger', 'That email belongs to another user.');
-                redirect_to('user.php');
-            }
-
-            $stmt = $database->prepare(
-                'UPDATE users SET name = :name, email = :email, role = :role, status = :status WHERE id = :id'
-            );
-            $stmt->execute([
-                'name' => $name,
-                'email' => $email,
-                'role' => $role,
-                'status' => $status,
-                'id' => $userId,
-            ]);
-            flash('success', 'User updated successfully.');
-        } elseif ($action === 'delete') {
+        // --- ACTION 3: DELETE STAFF ---
+        elseif ($action === 'delete_user') {
             if ($userId <= 0) {
                 flash('danger', 'Invalid user selected.');
                 redirect_to('user.php');
             }
 
-            $stmt = $database->prepare('DELETE FROM users WHERE id = :id');
+            if (in_array($userId, [1, 2], true)) {
+                flash('danger', 'Access Denied: Root administrator accounts (ID 1 & 2) cannot be deleted.');
+                redirect_to('user.php');
+            }
+
+            if ($userId === (int)($_SESSION['admin_id'] ?? 0)) {
+                flash('danger', 'You cannot delete your own account.');
+                redirect_to('user.php');
+            }
+
+            // Fetch target user's current role to check access
+            $stmt = $database->prepare("SELECT role FROM admins WHERE id = :id LIMIT 1");
             $stmt->execute(['id' => $userId]);
-            flash('success', 'User deleted successfully.');
+            $targetUser = $stmt->fetch();
+
+            if (!$targetUser) {
+                flash('danger', 'User not found.');
+                redirect_to('user.php');
+            }
+
+            if (is_secondary_admin() && $targetUser['role'] !== 'editor') {
+                flash('danger', 'Access Denied: Secondary Admins can only delete Editors.');
+                redirect_to('user.php');
+            }
+
+            $stmt = $database->prepare("DELETE FROM admins WHERE id = :id");
+            $stmt->execute(['id' => $userId]);
+            flash('success', 'User account removed successfully.');
         }
+
     } catch (PDOException $e) {
-        flash('danger', 'User database operation failed.');
+        flash('danger', 'Database exception encountered operating on staff: ' . $e->getMessage());
     }
 
     redirect_to('user.php');
 }
 
-$members = [];
-$loadError = '';
-
+$users = [];
 try {
-    $stmt = $database->prepare('SELECT id, name, email, role, status, joined_at FROM users ORDER BY id DESC');
+    $stmt = $database->prepare("SELECT id, fullname, email, role, status, created_at FROM admins ORDER BY id DESC");
     $stmt->execute();
-    $members = $stmt->fetchAll();
+    $users = $stmt->fetchAll();
 } catch (PDOException $e) {
-    $loadError = 'Users could not be loaded. Check that the users table exists.';
+    $loadError = 'Users data layer execution failed. Verify database structure.';
 }
 
 $flashMessages = consume_flash_messages();
 
 $pageScripts = <<<'HTML'
 <script>
-function filterUsers() {
-    const searchVal = document.getElementById('searchInput').value.toLowerCase();
-    const roleVal = document.getElementById('roleFilter').value;
-    const statusVal = document.getElementById('statusFilter').value;
-    document.querySelectorAll('.user-row').forEach(row => {
-        const name = row.querySelector('.user-name').textContent.toLowerCase();
-        const email = row.querySelector('.user-email').textContent.toLowerCase();
-        const role = row.querySelector('.user-role').textContent.trim();
-        const status = row.querySelector('.user-status').textContent.trim();
-        row.style.display = ((name.includes(searchVal) || email.includes(searchVal)) && (!roleVal || role === roleVal) && (!statusVal || status === statusVal)) ? '' : 'none';
-    });
-}
-
-function prepareAddUserModal() {
-    document.getElementById('userModalTitle').textContent = 'Add User';
-    document.getElementById('userActionToken').value = 'create';
-    document.getElementById('userIdToken').value = '';
-    document.getElementById('userForm').reset();
-}
-
-function editUser(button) {
-    document.getElementById('userModalTitle').textContent = 'Edit User';
-    document.getElementById('userActionToken').value = 'update';
-    document.getElementById('userIdToken').value = button.dataset.id;
-    document.getElementById('nameInput').value = button.dataset.name;
-    document.getElementById('emailInput').value = button.dataset.email;
-    document.getElementById('roleInput').value = button.dataset.role;
-    document.getElementById('statusInput').value = button.dataset.status;
+function editUserPermissions(button) {
+    document.getElementById('modalUserId').value = button.dataset.id;
+    document.getElementById('modalUsername').textContent = button.dataset.fullname;
+    document.getElementById('modalRoleInput').value = button.dataset.role;
+    document.getElementById('modalStatusInput').value = button.dataset.status;
     new bootstrap.Modal(document.getElementById('userModal')).show();
 }
 
-function deleteUser(id) {
-    if (confirm('Delete this user?')) {
+function confirmDeleteUser(id, name) {
+    if (confirm("Are you sure you want to delete staff account '" + name + "'? This action cannot be undone.")) {
         document.getElementById('deleteUserId').value = id;
         document.getElementById('deleteUserForm').submit();
     }
@@ -146,9 +190,9 @@ include __DIR__ . '/../components/sidebar.php';
 
 <main class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">Users</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="prepareAddUserModal()">
-            <i class="bi bi-plus-lg me-2"></i> New User
+        <h1 class="fw-bold text-primary mb-0">System Users</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-person-plus-fill me-2"></i>Add Staff
         </button>
     </div>
 
@@ -159,31 +203,9 @@ include __DIR__ . '/../components/sidebar.php';
         </div>
     <?php endforeach; ?>
 
-    <?php if ($loadError !== ''): ?>
+    <?php if (isset($loadError) && $loadError !== ''): ?>
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-5">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email..." onkeyup="filterUsers()">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" id="roleFilter" onchange="filterUsers()">
-                <option value="">All Roles</option>
-                <?php foreach ($roles as $role): ?>
-                    <option value="<?php echo e($role); ?>"><?php echo e($role); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <select class="form-select" id="statusFilter" onchange="filterUsers()">
-                <option value="">All Statuses</option>
-                <?php foreach ($statuses as $status): ?>
-                    <option value="<?php echo e($status); ?>"><?php echo e($status); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-    </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -192,34 +214,61 @@ include __DIR__ . '/../components/sidebar.php';
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>Name</th>
+                            <th>Full Name</th>
                             <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Joined</th>
+                            <th>Role Access</th>
+                            <th>Status Flag</th>
+                            <th>Joined Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($members): ?>
-                            <?php foreach ($members as $member): ?>
-                                <tr class="user-row">
-                                    <td class="fw-semibold">#<?php echo e($member['id']); ?></td>
-                                    <td class="user-name"><?php echo e($member['name']); ?></td>
-                                    <td class="user-email"><?php echo e($member['email']); ?></td>
-                                    <td><span class="badge bg-secondary user-role"><?php echo e($member['role']); ?></span></td>
-                                    <td><span class="badge bg-success user-status"><?php echo e($member['status']); ?></span></td>
-                                    <td class="small text-muted"><?php echo e(date('M d, Y', strtotime($member['joined_at'] ?? 'now'))); ?></td>
-                                    <td class="text-nowrap">
-                                        <button
-                                            class="btn btn-sm btn-outline-primary"
-                                            data-id="<?php echo e($member['id']); ?>"
-                                            data-name="<?php echo e($member['name']); ?>"
-                                            data-email="<?php echo e($member['email']); ?>"
-                                            data-role="<?php echo e($member['role']); ?>"
-                                            data-status="<?php echo e($member['status']); ?>"
-                                            onclick="editUser(this)">Edit</button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(<?php echo e((int) $member['id']); ?>)">Delete</button>
+                        <?php if ($users): ?>
+                            <?php foreach ($users as $user): ?>
+                                <?php 
+                                // Enforce root rules on display layer
+                                $userRole = (in_array((int)$user['id'], [1, 2], true)) ? 'primary_admin' : $user['role'];
+                                $userStatus = (in_array((int)$user['id'], [1, 2], true)) ? 'Active' : $user['status'];
+
+                                $badgeColor = $userRole === 'primary_admin' ? 'bg-danger' : ($userRole === 'secondary_admin' ? 'bg-warning text-dark' : 'bg-info text-dark');
+                                $statusColor = $userStatus === 'Active' ? 'bg-success' : 'bg-secondary';
+                                
+                                // Check if current admin can manage this user
+                                $canManage = false;
+                                if (!in_array((int)$user['id'], [1, 2], true)) {
+                                    if (is_primary_admin()) {
+                                        $canManage = true;
+                                    } elseif (is_secondary_admin()) {
+                                        $canManage = ($userRole === 'editor');
+                                    }
+                                }
+                                ?>
+                                <tr>
+                                    <td class="fw-semibold">#<?php echo e($user['id']); ?></td>
+                                    <td class="fw-medium"><?php echo e($user['fullname']); ?></td>
+                                    <td><?php echo e($user['email']); ?></td>
+                                    <td><span class="badge <?php echo e($badgeColor); ?>"><?php echo e(str_replace('_', ' ', $userRole)); ?></span></td>
+                                    <td><span class="badge <?php echo e($statusColor); ?>"><?php echo e($userStatus); ?></span></td>
+                                    <td class="small text-muted"><?php echo e(date('M d, Y', strtotime($user['created_at']))); ?></td>
+                                    <td>
+                                        <?php if ($canManage): ?>
+                                            <button 
+                                                class="btn btn-sm btn-outline-dark me-1"
+                                                data-id="<?php echo e($user['id']); ?>"
+                                                data-fullname="<?php echo e($user['fullname']); ?>"
+                                                data-role="<?php echo e($userRole); ?>"
+                                                data-status="<?php echo e($userStatus); ?>"
+                                                onclick="editUserPermissions(this)">
+                                                Modify
+                                            </button>
+                                            <button 
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDeleteUser(<?php echo e($user['id']); ?>, '<?php echo e(addslashes($user['fullname'])); ?>')">
+                                                Delete
+                                            </button>
+                                        <?php else: ?>
+                                            <span class="text-muted small"><i class="bi bi-lock-fill"></i> Protected</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -235,58 +284,107 @@ include __DIR__ . '/../components/sidebar.php';
     </div>
 </main>
 
-<div class="modal fade" id="userModal" tabindex="-1">
+<!-- Hidden form for deleting staff -->
+<form id="deleteUserForm" method="POST" class="d-none">
+    <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+    <input type="hidden" name="action" value="delete_user">
+    <input type="hidden" name="user_id" id="deleteUserId">
+</form>
+
+<!-- Modal: Add User -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="POST" id="userForm">
+            <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
-                <input type="hidden" name="action" id="userActionToken" value="create">
-                <input type="hidden" name="user_id" id="userIdToken">
+                <input type="hidden" name="action" value="add_user">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="userModalTitle">Add User</h5>
+                    <h5 class="modal-title">Add New Staff Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold" for="nameInput">Full Name</label>
-                        <input type="text" class="form-control" name="name" id="nameInput" required>
+                        <label class="form-label fw-semibold" for="addFullname">Full Name</label>
+                        <input type="text" class="form-control" name="fullname" id="addFullname" required placeholder="e.g. John Doe">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold" for="emailInput">Email</label>
-                        <input type="email" class="form-control" name="email" id="emailInput" required>
+                        <label class="form-label fw-semibold" for="addEmail">Email Address</label>
+                        <input type="email" class="form-control" name="email" id="addEmail" required placeholder="e.g. john@adminhub.com">
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold" for="roleInput">Role</label>
-                            <select class="form-select" name="role" id="roleInput">
-                                <?php foreach ($roles as $role): ?>
-                                    <option value="<?php echo e($role); ?>"><?php echo e($role); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold" for="statusInput">Status</label>
-                            <select class="form-select" name="status" id="statusInput">
-                                <?php foreach ($statuses as $status): ?>
-                                    <option value="<?php echo e($status); ?>"><?php echo e($status); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="addPassword">Password</label>
+                        <input type="password" class="form-control" name="password" id="addPassword" required placeholder="At least 8 characters">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="addRoleInput">Security Role</label>
+                        <select class="form-select" name="role" id="addRoleInput">
+                            <?php if (is_primary_admin()): ?>
+                                <option value="secondary_admin">Secondary Admin</option>
+                                <option value="editor" selected>Editor</option>
+                            <?php else: ?>
+                                <option value="editor" selected>Editor</option>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="addStatusInput">Account Status</label>
+                        <select class="form-select" name="status" id="addStatusInput">
+                            <?php foreach ($statuses as $statusOption): ?>
+                                <option value="<?php echo e($statusOption); ?>"><?php echo e($statusOption); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save User</button>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<form method="POST" id="deleteUserForm" class="d-none">
-    <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
-    <input type="hidden" name="action" value="delete">
-    <input type="hidden" name="user_id" id="deleteUserId">
-</form>
+<!-- Modal: Modify Permissions -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                <input type="hidden" name="action" value="update_user">
+                <input type="hidden" name="user_id" id="modalUserId">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modify Security Profile (<span id="modalUsername"></span>)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="modalRoleInput">Assigned Security Role</label>
+                        <select class="form-select" name="role" id="modalRoleInput">
+                            <?php if (is_primary_admin()): ?>
+                                <option value="primary_admin">Super Admin (Primary)</option>
+                                <option value="secondary_admin">Secondary Admin</option>
+                                <option value="editor">Editor</option>
+                            <?php else: ?>
+                                <option value="editor">Editor</option>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="modalStatusInput">Account Access Status</label>
+                        <select class="form-select" name="status" id="modalStatusInput">
+                            <?php foreach ($statuses as $statusOption): ?>
+                                <option value="<?php echo e($statusOption); ?>"><?php echo e($statusOption); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Commit Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php include __DIR__ . '/../components/footer.php'; ?>

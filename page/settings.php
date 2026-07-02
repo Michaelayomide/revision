@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/init.php';
 require_admin();
+require_role('primary_admin', 'secondary_admin');
 
 $pageTitle = 'Settings';
 
@@ -16,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $websiteName = trim($_POST['website_name'] ?? '');
         $siteTheme = ($_POST['site_theme'] ?? 'light') === 'dark' ? 'dark' : 'light';
         $notificationsEnabled = isset($_POST['notifications_enabled']) ? '1' : '0';
+        $lowStockThreshold = max(1, (int)($_POST['low_stock_threshold'] ?? 5));
 
         if ($websiteName === '') {
             flash('danger', 'Website name cannot be empty.');
@@ -26,6 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             save_app_setting($database, 'website_name', $websiteName);
             save_app_setting($database, 'site_theme', $siteTheme);
             save_app_setting($database, 'notifications_enabled', $notificationsEnabled);
+            save_app_setting($database, 'low_stock_threshold', (string)$lowStockThreshold);
+
+            // Security configurations (Only Super Admin / primary_admin is allowed to change)
+            if (is_primary_admin()) {
+                $customerPortalEnabled = isset($_POST['customer_portal_enabled']) ? '1' : '0';
+                $inactivityMonths = max(1, (int)($_POST['inactivity_months'] ?? 12));
+
+                save_app_setting($database, 'customer_portal_enabled', $customerPortalEnabled);
+                save_app_setting($database, 'inactivity_months', (string)$inactivityMonths);
+            }
+
             flash('success', 'Application settings saved.');
         } catch (PDOException $e) {
             flash('danger', 'Settings could not be saved.');
@@ -75,7 +88,7 @@ include __DIR__ . '/../components/sidebar.php';
                 <div class="card-header bg-white fw-bold">Profile</div>
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <img src="https://via.placeholder.com/64" class="rounded-circle" alt="Avatar">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($currentAdmin['fullname']); ?>&background=6366f1&color=fff" class="rounded-circle" width="64" height="64" alt="Avatar">
                         <div>
                             <div class="fw-semibold"><?php echo e($currentAdmin['fullname']); ?></div>
                             <div class="small text-muted"><?php echo e($currentAdmin['email']); ?></div>
@@ -96,9 +109,21 @@ include __DIR__ . '/../components/sidebar.php';
                         <span>Theme</span>
                         <strong><?php echo e(ucfirst(app_setting('site_theme', 'light'))); ?></strong>
                     </div>
-                    <div class="d-flex justify-content-between py-2">
+                    <div class="d-flex justify-content-between border-bottom py-2">
                         <span>Notifications</span>
                         <strong><?php echo app_setting('notifications_enabled', '1') === '1' ? 'On' : 'Off'; ?></strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Stock Threshold</span>
+                        <strong><?php echo e(app_setting('low_stock_threshold', '5')); ?> items</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Customer Portal</span>
+                        <strong><?php echo app_setting('customer_portal_enabled', '1') === '1' ? 'Enabled' : 'Disabled'; ?></strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span>Dormancy Period</span>
+                        <strong><?php echo e(app_setting('inactivity_months', '12')); ?> months</strong>
                     </div>
                 </div>
             </div>
@@ -147,6 +172,56 @@ include __DIR__ . '/../components/sidebar.php';
                                 name="notifications_enabled"
                                 <?php echo app_setting('notifications_enabled', '1') === '1' ? 'checked' : ''; ?>>
                             <label class="form-check-label" for="notificationsEnabled">Show notification icons and panel widgets</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="lowStockThreshold">Low Stock Threshold</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="lowStockThreshold"
+                            name="low_stock_threshold"
+                            value="<?php echo e(app_setting('low_stock_threshold', '5')); ?>"
+                            min="1"
+                            required>
+                        <div class="form-text">Alert threshold for product stock quantities.</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-secondary mb-3">Security & System Configurations</h5>
+                        <?php if (!is_primary_admin()): ?>
+                            <div class="alert alert-warning py-2 mb-3 small">
+                                <i class="bi bi-shield-lock-fill me-2"></i> Security and system configurations are locked. Only Super Admins can alter these parameters.
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="form-check form-switch mb-3">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id="customerPortalEnabled"
+                                name="customer_portal_enabled"
+                                <?php echo app_setting('customer_portal_enabled', '1') === '1' ? 'checked' : ''; ?>
+                                <?php echo !is_primary_admin() ? 'disabled' : ''; ?>>
+                            <label class="form-check-label" for="customerPortalEnabled">Enable Customer Self-Registration & Portal</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="inactivityMonths">Dormant Customer Account Deletion (Months)</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="inactivityMonths"
+                                name="inactivity_months"
+                                value="<?php echo e(app_setting('inactivity_months', '12')); ?>"
+                                min="1"
+                                <?php echo !is_primary_admin() ? 'readonly' : ''; ?>
+                                required>
+                            <div class="form-text">Inactivity duration before a customer account becomes eligible for deletion.</div>
                         </div>
                     </div>
                 </div>

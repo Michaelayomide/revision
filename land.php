@@ -89,8 +89,8 @@
                 <ul class="navbar-nav ms-auto align-items-center gap-2">
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
-                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="login.php">Sign In</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4 shadow-sm" href="login.php">Live Demo <i class="bi bi-arrow-right ms-1"></i></a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="page/login.php">Sign In</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4 shadow-sm" href="page/login.php">Live Demo <i class="bi bi-arrow-right ms-1"></i></a></li>
                 </ul>
             </div>
         </div>
@@ -105,7 +105,7 @@
                     <p class="lead text-white-50 mb-5 px-md-5 fs-5">Save months of raw engineering hours. A secure, interactive ecosystem featuring live authentication safeguards, product directories, and inventory managers built directly on PHP and PDO.</p>
                     
                     <div class="d-flex justify-content-center gap-3">
-                        <a href="login.php" class="btn btn-light btn-lg px-4 py-3 fs-6 fw-semibold shadow">Deploy Application Instance</a>
+                        <a href="page/login.php" class="btn btn-light btn-lg px-4 py-3 fs-6 fw-semibold shadow">Deploy Application Instance</a>
                         <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3 fs-6">Explore Architecture</a>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> 1 Year of Core Updates</li>
                                 <li class="text-muted"><i class="bi bi-x text-danger me-2"></i> Premium Priority Support</li>
                             </ul>
-                            <a href="login.php" class="btn btn-outline-primary w-100 py-2 mt-2">Purchase Source Stack</a>
+                            <a href="page/login.php" class="btn btn-outline-primary w-100 py-2 mt-2">Purchase Source Stack</a>
                         </div>
                     </div>
                 </div>
@@ -215,7 +215,7 @@
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> Direct Setup Documentation</li>
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> 24/7 Server Deployment Support</li>
                             </ul>
-                            <a href="login.php" class="btn btn-primary w-100 py-2 mt-2 shadow-sm">Buy Commercial Access</a>
+                            <a href="page/login.php" class="btn btn-primary w-100 py-2 mt-2 shadow-sm">Buy Commercial Access</a>
                         </div>
                     </div>
                 </div>
@@ -227,7 +227,7 @@
         <div class="container py-3">
             <h2 class="fw-bold mb-3 fs-2">Ready to ship your next web application?</h2>
             <p class="text-white-50 mb-4 px-md-5 mx-auto" style="max-width: 600px;">Stop building your user directories and database abstraction scripts from scratch every time.</p>
-            <a href="login.php" class="btn btn-primary btn-lg px-5 py-3 fs-6 fw-semibold">Get Started Instantly</a>
+            <a href="page/login.php" class="btn btn-primary btn-lg px-5 py-3 fs-6 fw-semibold">Get Started Instantly</a>
         </div>
     </section>
 

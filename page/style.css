@@ -289,7 +289,12 @@ footer {
     border-color: #e2e8f0 !important;
     color: #334155;
     font-size: 0.95rem;
-    padding: 11px 16px 11px 0px;
+    padding: 11px 16px;
+    border-radius: 10px !important;
+}
+
+.input-group .form-control {
+    padding-left: 0px !important;
     border-radius: 0 10px 10px 0 !important;
 }
 
@@ -429,4 +434,7 @@ td.text-nowrap {
 
 .app-search {
     width: 260px;
+    border-radius: 50rem !important;
+    padding-left: 2.5rem !important;
+    padding-right: 1.5rem !important;
 }

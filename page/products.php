@@ -162,19 +162,19 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <div class="row g-3 mb-4">
+    <form method="POST" onsubmit="event.preventDefault();" class="row g-3 mb-4">
         <div class="col-md-8">
-            <input type="text" id="productSearchInput" class="form-control" placeholder="Search by product name or SKU..." onkeyup="filterProducts()">
+            <input type="text" id="productSearchInput" name="product_search" class="form-control" placeholder="Search by product name or SKU..." onkeyup="filterProducts()">
         </div>
         <div class="col-md-4">
-            <select class="form-select" id="statusFilter" onchange="filterProducts()">
+            <select class="form-select" id="statusFilter" name="product_status_filter" onchange="filterProducts()">
                 <option value="">All Statuses</option>
                 <?php foreach ($productStatuses as $status): ?>
                     <option value="<?php echo e($status); ?>"><?php echo e($status); ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
-    </div>
+    </form>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">

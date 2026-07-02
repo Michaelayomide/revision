@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/../config/init.php';
 require_admin();
+require_role('primary_admin');
 
 $pageTitle = 'Reports';
-$orderStatuses = ['Pending', 'Processing', 'Completed', 'Cancelled'];
+$orderStatuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
 $fromDate = trim($_GET['from_date'] ?? '');
 $toDate = trim($_GET['to_date'] ?? '');
 $selectedStatus = $_GET['order_status'] ?? '';
