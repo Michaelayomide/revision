@@ -1,109 +1,77 @@
 <?php
-session_start();
+declare(strict_types=1);
 require_once __DIR__ . '/../config/init.php';
 
 if (isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true) {
-    redirect_to('../customer/index.php');
+    header('Location: shop.php');
+    exit();
 }
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($email !== '' && $password !== '') {
+        $stmt = $database->prepare("SELECT * FROM customers WHERE email = :email LIMIT 1");
+        $stmt->execute(['email' => $email]);
+        $customer = $stmt->fetch();
+
+        if ($customer && (int)$customer['is_active'] === 1 && password_verify($password, $customer['password_hash'])) {
+            $_SESSION['customer_logged_in'] = true;
+            $_SESSION['customer_id'] = (int)$customer['id'];
+            $_SESSION['customer_name'] = $customer['fullname'];
+            
+            header('Location: shop.php');
+            exit();
+        } else {
+            $error = 'Invalid email, password, or account is deactivated.';
+        }
+    } else {
+        $error = 'Please fill out all fields.';
+    }
+}
+$flashMessages = consume_flash_messages();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Login — <?php echo e(app_setting('website_name','AdminHub')); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Customer Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body class="auth-body">
-    <div style="display:flex; align-items:center; justify-content:center; width:100%;">
-        <div class="auth-card" id="authCard">
-
-            <!-- Brand Panel -->
-            <div class="auth-brand-panel text-white">
-                <div class="brand-logo">
-                    <i class="bi bi-shop-window"></i>
-                    <?php echo e(app_setting('website_name','AdminHub')); ?>
-                </div>
-                <div class="my-auto py-4">
-                    <h2 class="fw-bold mb-3" style="letter-spacing:-0.5px;">Welcome Back!</h2>
-                    <p class="text-white-50 m-0" style="line-height:1.6; font-size:0.95rem;">
-                        Sign in to your account to view your orders, track deliveries, and continue shopping.
-                    </p>
-                </div>
-                <div class="text-white-50 small">&copy; <?php echo date('Y'); ?> <?php echo e(app_setting('website_name','AdminHub')); ?></div>
-            </div>
-
-            <!-- Form Panel -->
-            <div class="auth-form-container">
-                <button type="button" class="panel-toggle-btn" onclick="document.getElementById('authCard').classList.toggle('panel-collapsed')" title="Toggle">
-                    <i class="bi bi-arrows-left-right"></i>
-                </button>
-
-                <div class="mb-4">
-                    <h2 class="fw-bold mb-1" style="letter-spacing:-0.5px; color:#1e293b;">Sign In</h2>
-                    <p class="text-muted" style="font-size:0.9rem;">Enter your email and password to access your account.</p>
-                </div>
-
-                <?php if (isset($_GET['reason']) && $_GET['reason'] === 'timeout'): ?>
-                    <div class="alert alert-warning py-2 mb-3 small" style="border-radius:10px;">
-                        <i class="bi bi-clock me-2"></i>Your session expired due to inactivity.
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($_SESSION['auth_errors'])): ?>
-                    <div class="alert alert-danger py-2 mb-3" style="font-size:0.88rem; border-radius:10px;">
-                        <ul class="mb-0 ps-3">
-                            <?php foreach ($_SESSION['auth_errors'] as $err): ?>
-                                <li><?php echo e($err); ?></li>
-                            <?php endforeach; unset($_SESSION['auth_errors']); ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($_SESSION['auth_success'])): ?>
-                    <div class="alert alert-success py-2 small mb-3" style="border-radius:10px;">
-                        <i class="bi bi-check-circle me-2"></i><?php echo e($_SESSION['auth_success']); unset($_SESSION['auth_success']); ?>
-                    </div>
-                <?php endif; ?>
-
-                <form action="../backend/val.php" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary" for="loginEmail">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control" id="loginEmail" name="email" placeholder="you@example.com" required>
+<body class="bg-light">
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <?php foreach ($flashMessages as $msg): ?>
+                <div class="alert alert-<?php echo e($msg['type']); ?>"><?php echo e($msg['message']); ?></div>
+            <?php endforeach; ?>
+            <?php if ($error !== ''): ?>
+                <div class="alert alert-danger"><?php echo e($error); ?></div>
+            <?php endif; ?>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold text-center mb-4">Customer Login</h3>
+                    <form method="POST" action="login.php">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" required>
                         </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-semibold text-secondary" for="loginPassword">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="••••••••" required>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
                         </div>
+                        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="register.php" class="text-decoration-none">New customer? Create an account</a>
                     </div>
-                    <button type="submit" name="customer_login_submit" class="btn btn-submit-action w-100 text-white shadow-sm mb-3">
-                        Sign In <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                    <div class="text-center small">
-                        <span class="text-muted">Don't have an account?</span>
-                        <a href="register.php" class="text-link-green ms-1">Create Account</a>
-                    </div>
-                </form>
-
-                <hr class="my-4">
-                <div class="text-center">
-                    <a href="../page/login.php" class="text-muted small">
-                        <i class="bi bi-shield-lock me-1"></i>Admin / Staff Login
-                    </a>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 </html>

@@ -1,121 +1,168 @@
 <?php
-session_start();
+declare(strict_types=1);
 require_once __DIR__ . '/../config/init.php';
 
 if (isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true) {
-    redirect_to('../customer/index.php');
+    header('Location: shop.php');
+    exit();
+}
+
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $errors[] = 'Security token invalid.';
+    }
+
+    $fullname = trim($_POST['fullname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone_number'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    $address = trim($_POST['residential_address'] ?? '');
+    $city = trim($_POST['city'] ?? '');
+    $state = trim($_POST['state_province'] ?? '');
+    $country = trim($_POST['country'] ?? '');
+    $postal = trim($_POST['postal_code'] ?? '');
+
+    // Strict Validation Checks
+    if ($fullname === '' || $email === '' || $phone === '' || $password === '' || $address === '' || $city === '' || $state === '' || $country === '') {
+        $errors[] = 'All required fields must be completed.';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Please provide a valid email format.';
+    }
+    if ($password !== $confirm_password) {
+        $errors[] = 'Passwords do not match.';
+    }
+    if (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters long.';
+    }
+    if (strlen($address) < 5 || strlen($address) > 255) {
+    $errors[] = 'Residential address must be between 5 and 255 characters.';
+    }
+    if (!preg_match("/^[A-Za-zÀ-ÿ .'-]{2,100}$/u", $city)) {
+    $errors[] = 'Please enter a valid city.';
+    }
+    if (!preg_match('/^[0-9+\-\s()]{7,20}$/', $phone)) {
+    $errors[] = 'Please enter a valid phone number.';
+    }
+    if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+        $errors[] = 'Please provide a valid email format.';
+    }
+    if (!preg_match("/^[A-Za-zÀ-ÿ .'-]{2,100}$/u", $country)) {
+    $errors[] = 'Please enter a valid country.';
+    }
+    
+    if (empty($errors)) {
+        try {
+            // Uniqueness Check
+            $stmt = $database->prepare("SELECT id FROM customers WHERE email = :email LIMIT 1");
+            $stmt->execute(['email' => $email]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This email address is already registered.';
+            } else {
+                $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                $insert = $database->prepare(
+                    "INSERT INTO customers (fullname, email, phone_number, password_hash, residential_address, city, state_province, country, postal_code, is_active)
+                     VALUES (:name, :email, :phone, :pass, :addr, :city, :state, :country, :postal, 1)"
+                );
+                $insert->execute([
+                    'name' => $fullname,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'pass' => $hashedPassword,
+                    'addr' => $address,
+                    'city' => $city,
+                    'state' => $state,
+                    'country' => $country,
+                    'postal' => $postal !== '' ? $postal : null
+                ]);
+
+                flash('success', 'Registration successful! Please log in.');
+                header('Location: login.php');
+                exit();
+            }
+        } catch (PDOException $e) {
+            $errors[] = 'Database registration failed. Please try again.';
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — <?php echo e(app_setting('website_name','AdminHub')); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Customer Registration</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body class="auth-body">
-    <div class="auth-wrapper" style="display:flex; align-items:center; justify-content:center; width:100%;">
-        <div class="auth-card" id="authCard">
+<body class="bg-light">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="fw-bold text-center mb-4">Create Customer Account</h2>
+                    
+                    <?php foreach ($errors as $err): ?>
+                        <div class="alert alert-danger"><?php echo e($err); ?></div>
+                    <?php endforeach; ?>
 
-            <!-- Brand Panel -->
-            <div class="auth-brand-panel text-white">
-                <div class="brand-logo">
-                    <i class="bi bi-shop-window"></i>
-                    <?php echo e(app_setting('website_name','AdminHub')); ?>
+                    <form method="POST" action="register.php">
+                        <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                        
+                        <div class="row g-3">
+                            <div class="col-100">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" name="fullname" class="form-control" required value="<?php echo e($fullname ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" name="email" class="form-control" required value="<?php echo e($email ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="text" name="phone_number" class="form-control" required value="<?php echo e($phone ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password *</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" name="confirm_password" class="form-control" required>
+                            </div>
+                            <div class="col-100">
+                                <label class="form-label">Residential Address *</label>
+                                <input type="text" name="residential_address" class="form-control" required value="<?php echo e($address ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City *</label>
+                                <input type="text" name="city" class="form-control" required value="<?php echo e($city ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">State / Province *</label>
+                                <input type="text" name="state_province" class="form-control" required value="<?php echo e($state ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country *</label>
+                                <input type="text" name="country" class="form-control" required value="<?php echo e($country ?? ''); ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Postal / ZIP Code</label>
+                                <input type="text" name="postal_code" class="form-control" value="<?php echo e($postal ?? ''); ?>">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mt-4">Register Account</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="login.php" class="text-decoration-none">Already have an account? Login here</a>
+                    </div>
                 </div>
-                <div class="my-auto py-4">
-                    <h2 class="fw-bold mb-3" style="letter-spacing:-0.5px;">Join Us Today!</h2>
-                    <p class="text-white-50 m-0" style="line-height:1.6; font-size:0.95rem;">
-                        Create your free account to browse products, track orders, and enjoy a seamless shopping experience.
-                    </p>
-                    <ul class="list-unstyled mt-4" style="font-size:0.88rem;">
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Free account creation</li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Real-time order tracking</li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Order history & receipts</li>
-                    </ul>
-                </div>
-                <div class="text-white-50 small">&copy; <?php echo date('Y'); ?> <?php echo e(app_setting('website_name','AdminHub')); ?></div>
-            </div>
-
-            <!-- Form Panel -->
-            <div class="auth-form-container">
-                <button type="button" class="panel-toggle-btn" onclick="document.getElementById('authCard').classList.toggle('panel-collapsed')" title="Toggle">
-                    <i class="bi bi-arrows-left-right"></i>
-                </button>
-
-                <div class="mb-4">
-                    <h2 class="fw-bold mb-1" style="letter-spacing:-0.5px; color:#1e293b;">Create Account</h2>
-                    <p class="text-muted" style="font-size:0.9rem;">Fill in your details to get started.</p>
-                </div>
-
-                <?php if (!empty($_SESSION['auth_errors'])): ?>
-                    <div class="alert alert-danger py-2 mb-3" style="font-size:0.88rem; border-radius:10px;">
-                        <ul class="mb-0 ps-3">
-                            <?php foreach ($_SESSION['auth_errors'] as $err): ?>
-                                <li><?php echo e($err); ?></li>
-                            <?php endforeach; unset($_SESSION['auth_errors']); ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($_SESSION['auth_success'])): ?>
-                    <div class="alert alert-success py-2 small mb-3" style="border-radius:10px;">
-                        <i class="bi bi-check-circle me-2"></i><?php echo e($_SESSION['auth_success']); unset($_SESSION['auth_success']); ?>
-                    </div>
-                <?php endif; ?>
-
-                <form action="../backend/val.php" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary" for="regFullname">Full Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" class="form-control" id="regFullname" name="fullname" placeholder="John Doe" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary" for="regEmail">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control" id="regEmail" name="email" placeholder="you@example.com" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary" for="regPassword">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="regPassword" name="password" placeholder="Minimum 8 characters" required minlength="8">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary" for="regConfirm">Confirm Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
-                            <input type="password" class="form-control" id="regConfirm" name="confirm_password" placeholder="Re-enter password" required>
-                        </div>
-                    </div>
-                    <div class="mb-4 form-check">
-                        <input class="form-check-input" type="checkbox" id="termsCheck" name="terms_agreement" required>
-                        <label class="form-check-label text-muted small" for="termsCheck">
-                            I agree to the <a href="#" class="text-link-green">Terms & Conditions</a>
-                        </label>
-                    </div>
-                    <button type="submit" name="customer_signup_submit" class="btn btn-submit-action w-100 text-white shadow-sm mb-3">
-                        Create My Account <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                    <div class="text-center small">
-                        <span class="text-muted">Already have an account?</span>
-                        <a href="login.php" class="text-link-green ms-1">Sign In</a>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 </html>

@@ -25,9 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('danger', 'Invalid customer selected.');
                 redirect_to('customers.php');
             }
-            // Archive check: only allow if inactive for configured months
+
+            // FIXED: Standardized date interval checking against MySQL baseline thresholds
             $stmt = $database->prepare(
-                "SELECT id, fullname, last_login_at, created_at FROM customers WHERE id = :id LIMIT 1"
+                "SELECT id, fullname, COALESCE(last_login_at, created_at) AS last_active FROM customers WHERE id = :id LIMIT 1"
             );
             $stmt->execute(['id' => $customerId]);
             $customer = $stmt->fetch();
@@ -37,16 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect_to('customers.php');
             }
 
-            $lastActive = $customer['last_login_at'] ?? $customer['created_at'];
-            $monthsInactive = (int) ((time() - strtotime($lastActive)) / (30 * 24 * 3600));
+            $lastActiveTime = new DateTime($customer['last_active']);
+            $currentTime = new DateTime();
+            $interval = $currentTime->diff($lastActiveTime);
+            $monthsInactive = ($interval->y * 12) + $interval->m;
 
             if ($monthsInactive < $inactivityMonths) {
                 flash('warning', "This customer is not yet eligible for deletion (last active {$monthsInactive} months ago; threshold: {$inactivityMonths} months).");
                 redirect_to('customers.php');
             }
 
-            // Cascade deletes handled by FK (cart_items, notifications)
-            // Nullify orders.customer_id via FK ON DELETE SET NULL
             $database->prepare("DELETE FROM customers WHERE id = :id")->execute(['id' => $customerId]);
             flash('success', "Customer account for \"{$customer['fullname']}\" has been deleted.");
 
@@ -85,8 +86,8 @@ try {
             c.is_active,
             c.last_login_at,
             c.created_at,
-            COUNT(DISTINCT o.id)                      AS order_count,
-            COALESCE(SUM(o.total_amount), 0)          AS total_spent,
+            COUNT(DISTINCT o.id)                                      AS order_count,
+            COALESCE(SUM(o.total_amount), 0)                          AS total_spent,
             TIMESTAMPDIFF(MONTH, COALESCE(c.last_login_at, c.created_at), NOW()) AS months_inactive
          FROM customers c
          LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status <> 'Cancelled'
@@ -106,8 +107,8 @@ include __DIR__ . '/../components/navbar.php';
 include __DIR__ . '/../components/sidebar.php';
 ?>
 
-<main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<main class="main-content d-flex flex-column align-items-start justify-content-start min-vh-100">
+    <div class="d-flex justify-content-between align-items-center w-100 mb-4">
         <div>
             <h1 class="fw-bold text-primary mb-0">Customer Accounts</h1>
             <small class="text-muted">Customers inactive for ≥<?php echo e($inactivityMonths); ?> months are eligible for deletion.</small>
@@ -116,23 +117,22 @@ include __DIR__ . '/../components/sidebar.php';
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
-        <div class="alert alert-<?php echo e($message['type']); ?> alert-dismissible fade show shadow-sm">
+        <div class="alert alert-<?php echo e($message['type']); ?> alert-dismissible fade show shadow-sm w-100">
             <?php echo e($message['message']); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endforeach; ?>
 
     <?php if ($loadError !== ''): ?>
-        <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
+        <div class="alert alert-warning shadow-sm w-100"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <!-- Search filter -->
-    <div class="mb-4">
+    <div class="mb-4 w-100">
         <input type="text" id="customerSearch" class="form-control" placeholder="Search by name or email..."
                onkeyup="filterCustomers()" style="max-width:400px;">
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 w-100 align-self-start" style="height: auto;">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -185,24 +185,22 @@ include __DIR__ . '/../components/sidebar.php';
                                     </td>
                                     <?php if (is_primary_admin()): ?>
                                         <td class="text-nowrap">
-                                            <!-- Toggle active -->
-                                            <form method="POST" class="d-inline">
+                                            <form method="POST" class="d-inline" action="customers.php">
                                                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="toggle_active">
                                                 <input type="hidden" name="customer_id" value="<?php echo e($cust['id']); ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary me-1"
+                                                <button type="submit" name="submit_toggle_active" class="btn btn-sm btn-outline-secondary me-1"
                                                     title="<?php echo $isActive ? 'Deactivate' : 'Activate'; ?>">
                                                     <i class="bi <?php echo $isActive ? 'bi-person-slash' : 'bi-person-check'; ?>"></i>
                                                 </button>
                                             </form>
-                                            <!-- Delete (only for dormant accounts) -->
                                             <?php if ($isInactive): ?>
-                                                <form method="POST" class="d-inline"
+                                                <form method="POST" class="d-inline" action="customers.php"
                                                     onsubmit="return confirm('Permanently delete <?php echo e(addslashes($cust['fullname'])); ?>\'s account? This cannot be undone.');">
                                                     <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                                                     <input type="hidden" name="action" value="delete_customer">
                                                     <input type="hidden" name="customer_id" value="<?php echo e($cust['id']); ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <button type="submit" name="submit_delete_customer" class="btn btn-sm btn-outline-danger">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>

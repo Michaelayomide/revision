@@ -48,6 +48,7 @@
         
         .feature-card {
             border: 1px solid #e2e8f0;
+            background-color: #ffffff;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .feature-card:hover {
@@ -89,6 +90,7 @@
                 <ul class="navbar-nav ms-auto align-items-center gap-2">
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
                     <li class="nav-item"><a class="nav-link text-white-50 px-3" href="page/login.php">Sign In</a></li>
                     <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4 shadow-sm" href="page/login.php">Live Demo <i class="bi bi-arrow-right ms-1"></i></a></li>
                 </ul>
@@ -101,7 +103,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-9">
                     <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-3">V2.0 Release Complete</span>
-                    <h1 class="display-4 fw-black text-white mb-4 style-heading" style="font-weight: 800; letter-spacing: -1px;">Production Ready Full-Stack Admin Engine</h1>
+                    <h1 class="display-4 text-white mb-4" style="font-weight: 800; letter-spacing: -1px;">Production Ready Full-Stack Admin Engine</h1>
                     <p class="lead text-white-50 mb-5 px-md-5 fs-5">Save months of raw engineering hours. A secure, interactive ecosystem featuring live authentication safeguards, product directories, and inventory managers built directly on PHP and PDO.</p>
                     
                     <div class="d-flex justify-content-center gap-3">
@@ -126,7 +128,39 @@
         </div>
     </section>
 
-    <section id="faq" class="py-5 bg-white">
+    <section id="features" class="py-5 bg-white">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold fs-1">Core Architecture Highlights</h2>
+                <p class="text-muted">A production-grade core layout engineered for reliability, fluid UI handling, and secure query operations.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card p-4 h-100 rounded-3">
+                        <div class="fs-2 text-primary mb-3"><i class="bi bi-shield-lock-fill"></i></div>
+                        <h4 class="fw-bold text-dark">Role-Based Guarding</h4>
+                        <p class="text-muted small mb-0">Complete session security matrix isolation across Primary Admin, Secondary Admin, and Support staff tiers instantly.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card p-4 h-100 rounded-3">
+                        <div class="fs-2 text-primary mb-3"><i class="bi bi-envelope-at-fill"></i></div>
+                        <h4 class="fw-bold text-dark">PHPMailer Notifications</h4>
+                        <p class="text-muted small mb-0">Built-in recovery token processes and custom HTML order status update automated templates running on trusted mailers.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card p-4 h-100 rounded-3">
+                        <div class="fs-2 text-primary mb-3"><i class="bi bi-database-fill-check"></i></div>
+                        <h4 class="fw-bold text-dark">PDO Safe Transactions</h4>
+                        <p class="text-muted small mb-0">Full parameterized prepare calls protecting against SQL injections while maintaining product catalogs and stock levels tracking.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-5 bg-light border-top">
         <div class="container py-4">
             <div class="text-center mb-5">
                 <h2 class="fw-bold fs-1">Frequently Asked Questions</h2>
@@ -134,7 +168,7 @@
             </div>
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="accordion accordion-flush shadow-sm rounded-4 border" id="faqAccordion">
+                    <div class="accordion accordion-flush shadow-sm rounded-4 border bg-white" id="faqAccordion">
                         <div class="accordion-item rounded-top-4">
                             <h2 class="accordion-header">
                                 <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
@@ -177,7 +211,7 @@
         </div>
     </section>
 
-    <section id="pricing" class="py-5 bg-light border-top border-bottom">
+    <section id="pricing" class="py-5 bg-white border-top border-bottom">
         <div class="container py-4">
             <div class="text-center mb-5">
                 <h2 class="fw-bold fs-1">Simple, Transparent Pricing</h2>
@@ -211,7 +245,7 @@
                             <hr>
                             <ul class="list-unstyled space-y-3 my-4">
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> Everything in Developer tier</li>
-                                <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> Saas-Ready White Label License</li>
+                                <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> SaaS-Ready White Label License</li>
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> Direct Setup Documentation</li>
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> 24/7 Server Deployment Support</li>
                             </ul>
