@@ -18,43 +18,141 @@ $navItems = [
 
 $visibleItems = array_filter($navItems, fn($item) => in_array($role, $item['roles'], true));
 ?>
+<style>
+    /* ==========================================================================
+   PRODUCTION CROSS-PLATFORM SIDEBAR CONTROLS (DESKTOP & LAPTOP)
+   ========================================================================== */
+@media (min-width: 992px) {
+    .sidebar {
+        background: var(--dark);
+        color: white;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 270px;
+        z-index: 1000;
+        padding-top: 75px; /* Alignment gap spacing layer for top headers */
+        box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+        
+        /* Flex Alignment Architecture */
+        display: flex !important;
+        flex-direction: column;
+        overflow: hidden; /* Lock master viewport wrapper bounds */
+    }
+
+    /* Independent Scroll Frame Axis for Laptop Layouts */
+    .sidebar-scroll-engine {
+        flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET VIEWPORT ISOLATION (OFFCANVAS ADAPTATION)
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .offcanvas-body {
+        display: flex !important;
+        flex-direction: column;
+        overflow: hidden !important; /* Disables total container broken scrolling */
+        height: 100%;
+    }
+
+    /* Independent Scroll Frame Axis for Mobile Panels */
+    .sidebar-scroll-engine {
+        flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch; /* Native mobile inertial momentum velocity scroll */
+    }
+}
+
+/* ==========================================================================
+   SHARED ANIMATION & GRAPHICAL LINK UTILITIES (PRESERVED HOVER RENDERING)
+   ========================================================================== */
+.sidebar .nav-link,
+#mobileSidebar .nav-link {
+    color: #cbd5e1;
+    padding: 15px 25px;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-decoration: none;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active,
+#mobileSidebar .nav-link:hover,
+#mobileSidebar .nav-link.active {
+    background: #334155;
+    color: white;
+    border-left: 4px solid var(--primary);
+    transform: translateX(8px);
+}
+
+/* Pinned Footer Layer Component Boundary Matrix */
+.sidebar-footer-pinned {
+    margin-top: auto;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.1);
+}
+</style>
 <div class="sidebar d-none d-lg-block">
-    <div class="nav flex-column pt-3">
-        <?php foreach ($visibleItems as $item): ?>
-            <?php $activeClass = $currentPage === $item['href'] ? ' active' : ''; ?>
-            <a href="<?php echo e($item['href']); ?>" class="nav-link<?php echo $activeClass; ?>">
-                <i class="bi <?php echo e($item['icon']); ?> me-2"></i> <?php echo e($item['label']); ?>
-                <?php if ($item['href'] === 'notifications.php' && ($unread_notif_count ?? 0) > 0): ?>
-                    <span class="badge rounded-pill ms-auto" style="background:#ef4444; font-size:0.6rem;"><?php echo $unread_notif_count; ?></span>
-                <?php endif; ?>
-            </a>
-        <?php endforeach; ?>
-        <hr class="text-white-50 mx-3">
+    <div class="sidebar-scroll-engine">
+        <div class="nav flex-column">
+            <?php foreach ($visibleItems as $item): ?>
+                <?php $activeClass = $currentPage === $item['href'] ? ' active' : ''; ?>
+                <a href="<?php echo e($item['href']); ?>" class="nav-link<?php echo $activeClass; ?>">
+                    <i class="bi <?php echo e($item['icon']); ?> me-3 fs-5"></i> 
+                    <span class="flex-grow-1"><?php echo e($item['label']); ?></span>
+                    <?php if ($item['href'] === 'notifications.php' && ($unread_notif_count ?? 0) > 0): ?>
+                        <span class="badge rounded-pill bg-danger ms-auto" style="font-size:0.6rem;"><?php echo $unread_notif_count; ?></span>
+                    <?php endif; ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <div class="sidebar-footer-pinned">
         <a href="logout.php" class="nav-link text-danger fw-semibold">
-            <i class="bi bi-box-arrow-right me-2"></i> Log Out
+            <i class="bi bi-box-arrow-right me-3 fs-5"></i> Log Out
         </a>
     </div>
 </div>
 
-<!-- Mobile Offcanvas Sidebar -->
 <div class="offcanvas offcanvas-start d-lg-none" id="mobileSidebar" tabindex="-1" style="background:#1e2937; color:white; width:270px;">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title fw-bold"><?php echo e($siteName); ?></h5>
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+        <h5 class="offcanvas-title fw-bold text-white"><?php echo e($siteName); ?></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    
     <div class="offcanvas-body p-0">
-        <div class="nav flex-column">
-            <?php foreach ($visibleItems as $item): ?>
-                <?php $activeClass = $currentPage === $item['href'] ? ' active' : ''; ?>
-                <a href="<?php echo e($item['href']); ?>" class="nav-link px-4 py-3<?php echo $activeClass; ?>">
-                    <i class="bi <?php echo e($item['icon']); ?> me-3"></i> <?php echo e($item['label']); ?>
-                    <?php if ($item['href'] === 'notifications.php' && ($unread_notif_count ?? 0) > 0): ?>
-                        <span class="badge rounded-pill ms-2" style="background:#ef4444; font-size:0.6rem;"><?php echo $unread_notif_count; ?></span>
-                    <?php endif; ?>
-                </a>
-            <?php endforeach; ?>
-            <a href="logout.php" class="nav-link text-danger fw-semibold px-4 py-3">
-                <i class="bi bi-box-arrow-right me-3"></i> Log Out
+        <div class="sidebar-scroll-engine pt-2">
+            <div class="nav flex-column">
+                <?php foreach ($visibleItems as $item): ?>
+                    <?php $activeClass = $currentPage === $item['href'] ? ' active' : ''; ?>
+                    <a href="<?php echo e($item['href']); ?>" class="nav-link<?php echo $activeClass; ?>">
+                        <i class="bi <?php echo e($item['icon']); ?> me-3 fs-5"></i> 
+                        <span class="flex-grow-1"><?php echo e($item['label']); ?></span>
+                        <?php if ($item['href'] === 'notifications.php' && ($unread_notif_count ?? 0) > 0): ?>
+                            <span class="badge rounded-pill bg-danger ms-auto" style="font-size:0.6rem;"><?php echo $unread_notif_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="sidebar-footer-pinned">
+            <a href="logout.php" class="nav-link text-danger fw-semibold">
+                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Log Out
             </a>
         </div>
     </div>

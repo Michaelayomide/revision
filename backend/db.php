@@ -1,9 +1,14 @@
 <?php
 
-$host = 'localhost';
+// $host = 'localhost';
+// $db_name = 'revsion';
+// $username = 'root';
+// $password = '';
+
+$host = 'sql306.infinityfree.com';
 $db_name = 'revsion';
-$username = 'root';
-$password = '';
+$username = 'if0_42350463';
+$password = 'n9MgDLScn3Ix';
 
 try {
     $pdo = new PDO(

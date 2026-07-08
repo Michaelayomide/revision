@@ -525,3 +525,32 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Pagination ─────────────────────────────── */
+.pagination .page-link {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 6px 13px;
+}
+.pagination .page-item.active .page-link {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+.pagination .page-link:hover {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+  border-color: var(--brand-primary);
+}
+
+/* ── Breadcrumb ─────────────────────────────── */
+.breadcrumb { background: none; padding: 0; margin: 0 0 8px; }
+.breadcrumb-item + .breadcrumb-item::before { color: var(--text-muted); }
+.breadcrumb-item.active { color: var(--text-secondary); font-weight: 500; }
+
+/* ── Utility ─────────────────────────────────── */
+.min-w-0 { min-width: 0; }
+.text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+

@@ -25,42 +25,6 @@ body {
     z-index: 1100;
 }
 
-/* Sidebar */
-.sidebar {
-    background: var(--dark);
-    color: white;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 270px;
-    z-index: 1000;
-    padding-top: 75px;
-    box-shadow: 3px 0 15px rgba(0,0,0,0.2);
-}
-
-.sidebar .nav-link {
-    color: #cbd5e1;
-    padding: 15px 25px;
-    font-weight: 500;
-    border-left: 4px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-    background: #334155;
-    color: white;
-    border-left: 4px solid var(--primary);
-    transform: translateX(8px);
-}
-
-/* Prevent active highlight bleeding across multiple links */
-.sidebar .nav-link {
-    display: block;
-    position: relative;
-}
-
 
 /* Main content layout: keep from clipping under fixed sidebar/nav */
 @media (min-width: 992px) {
