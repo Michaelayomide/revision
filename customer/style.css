@@ -554,3 +554,139 @@ body {
 .min-w-0 { min-width: 0; }
 .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ==========================================================================
+   CUSTOMER AUTH PAGES (Login / Register)
+   Modern, centered, responsive — mirrors the admin dashboard design system.
+   ========================================================================== */
+.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #0b1120 0%, #134e4a 55%, #064e3b 100%);
+}
+
+.auth-card-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+  padding: 36px 32px;
+}
+.auth-card-box.auth-wide { max-width: 800px; }
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+.auth-brand .auth-logo-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-dark));
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.auth-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.4px; line-height: 1.25; }
+.auth-subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 24px; }
+
+/* Form field spacing: 12px between groups, 20px between sections */
+.auth-card-box .form-label { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+.auth-card-box .field { margin-bottom: 12px; }
+.auth-card-box .section-gap { margin-top: 20px; }
+
+.auth-card-box .form-control,
+.auth-card-box .form-select {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+.auth-card-box textarea.form-control { height: auto; min-height: 90px; line-height: 1.5; }
+.auth-card-box .form-control:hover,
+.auth-card-box .form-select:hover { border-color: var(--brand-primary); }
+.auth-card-box .form-control:focus,
+.auth-card-box .form-select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+.auth-card-box .form-check-input:checked { background-color: var(--brand-primary); border-color: var(--brand-primary); }
+.auth-card-box .form-check-input:focus { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+.auth-card-box .form-text { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Show / Hide password */
+.pw-field { position: relative; }
+.pw-field .form-control { padding-right: 44px; }
+.pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.pw-toggle:hover { color: var(--text-primary); background: var(--border); }
+.pw-toggle:focus-visible { outline: 3px solid rgba(16, 185, 129, 0.4); outline-offset: 1px; }
+
+/* Primary brand button */
+.auth-card-box .btn-brand {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+  height: 44px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+.auth-card-box .btn-brand:hover { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; transform: translateY(-1px); }
+.auth-card-box .btn-brand:focus-visible { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35); outline: none; }
+
+.auth-foot { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary); }
+.auth-foot a { color: var(--brand-primary); font-weight: 600; }
+.auth-foot a:hover { color: var(--brand-dark); text-decoration: underline; }
+
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Responsive widths */
+@media (max-width: 991.98px) {
+  .auth-card-box { max-width: 90%; }
+  .auth-card-box.auth-wide { max-width: 90%; }
+}
+@media (max-width: 575.98px) {
+  .auth-card-box { max-width: 95%; padding: 28px 20px; }
+  .auth-card-box.auth-wide { max-width: 95%; }
+  .auth-page { padding: 24px 14px; }
+}
+

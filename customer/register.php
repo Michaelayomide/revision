@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!preg_match("/^[A-Za-zÀ-ÿ .'-]{2,100}$/u", $country)) {
     $errors[] = 'Please enter a valid country.';
     }
-    
+
     if (empty($errors)) {
         try {
             // Uniqueness Check
@@ -93,76 +93,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customer Registration</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your <?php echo e(app_setting('website_name', 'AdminHub')); ?> customer account.">
+    <title>Customer Registration &middot; <?php echo e(app_setting('website_name', 'AdminHub')); ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-light">
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h2 class="fw-bold text-center mb-4">Create Customer Account</h2>
-                    
-                    <?php foreach ($errors as $err): ?>
-                        <div class="alert alert-danger"><?php echo e($err); ?></div>
-                    <?php endforeach; ?>
+<body class="auth-page">
 
-                    <form method="POST" action="register.php">
-                        <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
-                        
-                        <div class="row g-3">
-                            <div class="col-100">
-                                <label class="form-label">Full Name *</label>
-                                <input type="text" name="fullname" class="form-control" required value="<?php echo e($fullname ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email Address *</label>
-                                <input type="email" name="email" class="form-control" required value="<?php echo e($email ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone Number *</label>
-                                <input type="text" name="phone_number" class="form-control" required value="<?php echo e($phone ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Password *</label>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Confirm Password *</label>
-                                <input type="password" name="confirm_password" class="form-control" required>
-                            </div>
-                            <div class="col-100">
-                                <label class="form-label">Residential Address *</label>
-                                <input type="text" name="residential_address" class="form-control" required value="<?php echo e($address ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">City *</label>
-                                <input type="text" name="city" class="form-control" required value="<?php echo e($city ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">State / Province *</label>
-                                <input type="text" name="state_province" class="form-control" required value="<?php echo e($state ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Country *</label>
-                                <input type="text" name="country" class="form-control" required value="<?php echo e($country ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Postal / ZIP Code</label>
-                                <input type="text" name="postal_code" class="form-control" value="<?php echo e($postal ?? ''); ?>">
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100 mt-4">Register Account</button>
-                    </form>
-                    <div class="text-center mt-3">
-                        <a href="login.php" class="text-decoration-none">Already have an account? Login here</a>
+    <main class="auth-card-box auth-wide" role="main">
+        <div class="auth-brand mb-3">
+            <span class="auth-logo-mark"><i class="bi bi-bag-heart-fill"></i></span>
+            <?php echo e(app_setting('website_name', 'AdminHub')); ?>
+        </div>
+        <h1 class="auth-title">Create Customer Account</h1>
+        <p class="auth-subtitle">Fill in your details to get started.</p>
+
+        <?php foreach ($errors as $err): ?>
+            <div class="alert alert-danger py-2"><?php echo e($err); ?></div>
+        <?php endforeach; ?>
+
+        <form method="POST" action="register.php" novalidate>
+            <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="fullname">Full Name *</label>
+                    <input type="text" name="fullname" id="fullname" class="form-control" autocomplete="name" required value="<?php echo e($fullname ?? ''); ?>">
+                </div>
+
+                <div class="col-lg-6">
+                    <label class="form-label" for="email">Email Address *</label>
+                    <input type="email" name="email" id="email" class="form-control" autocomplete="email" required value="<?php echo e($email ?? ''); ?>">
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label" for="phone_number">Phone Number *</label>
+                    <input type="tel" name="phone_number" id="phone_number" class="form-control" autocomplete="tel" inputmode="tel" required value="<?php echo e($phone ?? ''); ?>">
+                </div>
+
+                <div class="col-lg-6">
+                    <label class="form-label" for="password">Password *</label>
+                    <div class="pw-field">
+                        <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
+                        <button type="button" class="pw-toggle" data-target="password" aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
                 </div>
+                <div class="col-lg-6">
+                    <label class="form-label" for="confirm_password">Confirm Password *</label>
+                    <div class="pw-field">
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" autocomplete="new-password" required>
+                        <button type="button" class="pw-toggle" data-target="confirm_password" aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-12 section-gap">
+                    <label class="form-label" for="residential_address">Residential Address *</label>
+                    <input type="text" name="residential_address" id="residential_address" class="form-control" autocomplete="street-address" required value="<?php echo e($address ?? ''); ?>">
+                </div>
+
+                <div class="col-lg-6">
+                    <label class="form-label" for="city">City *</label>
+                    <input type="text" name="city" id="city" class="form-control" autocomplete="address-level2" required value="<?php echo e($city ?? ''); ?>">
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label" for="state_province">State / Province *</label>
+                    <input type="text" name="state_province" id="state_province" class="form-control" autocomplete="address-level1" required value="<?php echo e($state ?? ''); ?>">
+                </div>
+
+                <div class="col-lg-6">
+                    <label class="form-label" for="country">Country *</label>
+                    <input type="text" name="country" id="country" class="form-control" autocomplete="country-name" required value="<?php echo e($country ?? ''); ?>">
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label" for="postal_code">Postal / ZIP Code</label>
+                    <input type="text" name="postal_code" id="postal_code" class="form-control" autocomplete="postal-code" inputmode="numeric" value="<?php echo e($postal ?? ''); ?>">
+                </div>
             </div>
+
+            <button type="submit" class="btn-brand section-gap">Register Account</button>
+        </form>
+
+        <div class="auth-foot">
+            Already have an account? <a href="login.php">Login here</a>
         </div>
-    </div>
-</div>
+    </main>
+
+    <script>
+        document.querySelectorAll('.pw-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.dataset.target);
+                if (!input) return;
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            });
+        });
+    </script>
+
 </body>
 </html>
