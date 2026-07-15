@@ -1,0 +1,50 @@
+-- 1. Upgrade the existing customers table with registration columns
+CREATE TABLES IF NOT EXISTS `customers`
+    ADD COLUMN `phone_number` VARCHAR(20) NOT NULL AFTER `email`,
+    ADD COLUMN `residential_address` TEXT NOT NULL AFTER `password_hash`,
+    ADD COLUMN `city` VARCHAR(100) NOT NULL AFTER `residential_address`,
+    ADD COLUMN `state_province` VARCHAR(100) NOT NULL AFTER `city`,
+    ADD COLUMN `country` VARCHAR(100) NOT NULL AFTER `state_province`,
+    ADD COLUMN `postal_code` VARCHAR(20) NULL AFTER `country`,
+    DROP INDEX IF EXISTS `email`,
+    ADD UNIQUE KEY `unique_email` (`email`);
+
+-- 2. Verify or create Shopping Cart Items Table
+CREATE TABLE IF NOT EXISTS `cart_items` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `customer_id` INT NOT NULL,
+    `product_id` INT NOT NULL,
+    `quantity` INT NOT NULL DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `user_product` (`customer_id`, `product_id`),
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. Verify or create Orders master table
+CREATE TABLE IF NOT EXISTS `orders` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `customer_id` INT NULL,
+    `txn_id` VARCHAR(50) NOT NULL UNIQUE,
+    `customer_name` VARCHAR(160) NOT NULL,
+    `shipping_phone` VARCHAR(20) NOT NULL,
+    `shipping_address` TEXT NOT NULL,
+    `payment_method` VARCHAR(50) NOT NULL DEFAULT 'Cash on Delivery',
+    `total_amount` DECIMAL(10,2) NOT NULL,
+    `order_status` ENUM('Pending', 'Approved', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending',
+    `shipping_status` VARCHAR(50) NOT NULL DEFAULT 'Processing',
+    `tracking_link` VARCHAR(255) NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Verify or create Order Items sub-table
+CREATE TABLE IF NOT EXISTS `order_items` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `order_id` INT NOT NULL,
+    `product_id` INT NOT NULL,
+    `quantity` INT NOT NULL,
+    `price` DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

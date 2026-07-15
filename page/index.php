@@ -49,53 +49,70 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </nav>
+            <h1 class="page-title"><?php echo e($greeting . ', ' . $admin_display_name); ?></h1>
+        </div>
+        <div class="page-header-actions">
+            <a href="orders.php" class="btn btn-primary"><i class="bi bi-bag-check"></i> View Orders</a>
+        </div>
+    </div>
+
     <div class="welcome-header">
-        <h2 class="fw-bold mb-1"><?php echo e($greeting . ', ' . $admin_display_name); ?></h2>
-        <p class="mb-0 opacity-90">Live operating metrics from your catalog, stock, and order workflow.</p>
+        <div>
+            <h2>Live operating overview</h2>
+            <p>Key metrics from your catalog, stock, and order workflow at a glance.</p>
+        </div>
+        <i class="bi bi-speedometer2" style="font-size: 2.6rem; opacity: 0.85;"></i>
     </div>
 
     <?php if ($dbError !== ''): ?>
-        <div class="alert alert-warning shadow-sm"><?php echo e($dbError); ?></div>
+        <div class="alert alert-warning shadow-sm"><i class="bi bi-exclamation-triangle"></i> <?php echo e($dbError); ?></div>
     <?php endif; ?>
 
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #10b981, #059669);">
                 <div class="card-body">
-                    <i class="bi bi-currency-dollar fs-1 mb-3"></i>
-                    <h5>Total Revenue</h5>
-                    <h2 class="fw-bold"><?php echo e(money($metrics['total_revenue'])); ?></h2>
-                    <small class="opacity-90">Completed and active order value</small>
+                    <span class="stat-icon"><i class="bi bi-currency-dollar"></i></span>
+                    <span class="stat-label">Total Revenue</span>
+                    <span class="stat-value"><?php echo e(money($metrics['total_revenue'])); ?></span>
+                    <span class="stat-meta">Completed and active orders</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
                 <div class="card-body">
-                    <i class="bi bi-boxes fs-1 mb-3"></i>
-                    <h5>System Stock</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $metrics['system_stock'])); ?></h2>
-                    <small class="opacity-90">Total catalog units available</small>
+                    <span class="stat-icon"><i class="bi bi-boxes"></i></span>
+                    <span class="stat-label">System Stock</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $metrics['system_stock'])); ?></span>
+                    <span class="stat-meta">Total catalog units</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                 <div class="card-body">
-                    <i class="bi bi-clock-history fs-1 mb-3"></i>
-                    <h5>Pending Orders</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $metrics['pending_orders'])); ?></h2>
-                    <small class="opacity-90">Awaiting processing</small>
+                    <span class="stat-icon"><i class="bi bi-clock-history"></i></span>
+                    <span class="stat-label">Pending Orders</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $metrics['pending_orders'])); ?></span>
+                    <span class="stat-meta">Awaiting processing</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
                 <div class="card-body">
-                    <i class="bi bi-box-seam fs-1 mb-3"></i>
-                    <h5>Total Products</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $metrics['total_products'])); ?></h2>
-                    <small class="opacity-90">Catalog records</small>
+                    <span class="stat-icon"><i class="bi bi-box-seam"></i></span>
+                    <span class="stat-label">Total Products</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $metrics['total_products'])); ?></span>
+                    <span class="stat-meta">Catalog records</span>
                 </div>
             </div>
         </div>
@@ -103,12 +120,15 @@ include __DIR__ . '/../components/sidebar.php';
 
     <div class="row g-4">
         <div class="col-lg-7">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold py-3 border-bottom">Recent Orders</div>
+            <div class="card h-100">
+                <div class="card-header">
+                    <span class="card-title">Recent Orders</span>
+                    <a href="orders.php" class="btn btn-sm btn-outline-secondary">View all</a>
+                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Txn ID</th>
                                     <th>Customer</th>
@@ -123,14 +143,20 @@ include __DIR__ . '/../components/sidebar.php';
                                         <tr>
                                             <td class="fw-semibold"><?php echo e($order['txn_id']); ?></td>
                                             <td><?php echo e($order['customer_name']); ?></td>
-                                            <td><?php echo e(money($order['total_amount'])); ?></td>
-                                            <td><span class="badge bg-secondary"><?php echo e($order['order_status']); ?></span></td>
+                                            <td class="cell-strong text-success"><?php echo e(money($order['total_amount'])); ?></td>
+                                            <td><span class="badge bg-secondary status"><?php echo e($order['order_status']); ?></span></td>
                                             <td class="small text-muted"><?php echo e(date('M d, Y H:i', strtotime($order['created_at']))); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">No orders captured yet.</td>
+                                        <td colspan="5">
+                                            <div class="empty-state">
+                                                <i class="bi bi-inbox"></i>
+                                                <div class="empty-title">No orders captured yet</div>
+                                                <div class="empty-text">New orders will appear here in real time.</div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -142,19 +168,23 @@ include __DIR__ . '/../components/sidebar.php';
 
         <div class="col-lg-5">
             <div class="card h-100">
-                <div class="card-header bg-white fw-bold py-3">Quick Actions</div>
-                <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="products.php" class="btn btn-outline-info btn-lg">
-                            <i class="bi bi-box-seam me-2"></i> Manage Products
-                        </a>
-                        <a href="stock.php" class="btn btn-outline-success btn-lg">
-                            <i class="bi bi-boxes me-2"></i> Adjust Stock
-                        </a>
-                        <a href="orders.php" class="btn btn-outline-primary btn-lg">
-                            <i class="bi bi-bag-check me-2"></i> Create Order
-                        </a>
-                    </div>
+                <div class="card-header"><span class="card-title">Quick Actions</span></div>
+                <div class="card-body d-flex flex-column gap-3">
+                    <a href="products.php" class="quick-action">
+                        <span class="qa-icon"><i class="bi bi-box-seam"></i></span>
+                        <span><span class="qa-label d-block">Manage Products</span><span class="qa-sub">Add, edit, and organize your catalog</span></span>
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                    </a>
+                    <a href="stock.php" class="quick-action">
+                        <span class="qa-icon"><i class="bi bi-boxes"></i></span>
+                        <span><span class="qa-label d-block">Adjust Stock</span><span class="qa-sub">Update inventory and availability</span></span>
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                    </a>
+                    <a href="orders.php" class="quick-action">
+                        <span class="qa-icon"><i class="bi bi-bag-check"></i></span>
+                        <span><span class="qa-label d-block">Review Orders</span><span class="qa-sub">Track and process customer orders</span></span>
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                    </a>
                 </div>
             </div>
         </div>

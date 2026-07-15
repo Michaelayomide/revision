@@ -8,6 +8,9 @@ $themeAttribute = app_setting('site_theme') === 'dark' ? 'dark' : 'light';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<?php echo e(app_setting('website_name', 'AdminHub')); ?> — enterprise operations dashboard.">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#0f172a">
     <title><?php echo e($pageTitle . ' - ' . app_setting('website_name', 'AdminHub')); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -73,7 +73,17 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <h1 class="fw-bold text-primary mb-4">Settings</h1>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Settings</h1>
+        </div>
+    </div>
 
     <?php foreach ($flashMessages as $message): ?>
         <div class="alert alert-<?php echo e($message['type']); ?> alert-dismissible fade show shadow-sm">
@@ -84,8 +94,8 @@ include __DIR__ . '/../components/sidebar.php';
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white fw-bold">Profile</div>
+            <div class="card mb-4">
+                <div class="card-header"><span class="card-title">Profile</span></div>
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($currentAdmin['fullname']); ?>&background=6366f1&color=fff" class="rounded-circle" width="64" height="64" alt="Avatar">
@@ -98,8 +108,8 @@ include __DIR__ . '/../components/sidebar.php';
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold">Current Configuration</div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Current Configuration</span></div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between border-bottom py-2">
                         <span>Website</span>
@@ -130,10 +140,10 @@ include __DIR__ . '/../components/sidebar.php';
         </div>
 
         <div class="col-lg-8">
-            <form method="POST" class="card shadow-sm border-0">
+            <form method="POST" class="card">
                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                 <input type="hidden" name="action" value="save_app_settings">
-                <div class="card-header bg-white fw-bold">Application Settings</div>
+                <div class="card-header"><span class="card-title">Application Settings</span></div>
                 <div class="card-body">
                     <div class="mb-4">
                         <label class="form-label fw-semibold" for="websiteName">Website Name</label>

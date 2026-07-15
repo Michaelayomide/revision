@@ -93,8 +93,16 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">Orders Management</h1>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Orders</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Orders Management</h1>
+        </div>
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
@@ -104,11 +112,11 @@ include __DIR__ . '/../components/sidebar.php';
         </div>
     <?php endforeach; ?>
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Txn ID</th>
@@ -127,9 +135,9 @@ include __DIR__ . '/../components/sidebar.php';
                                     <td class="fw-semibold">#<?php echo e($order['id']); ?></td>
                                     <td><?php echo e($order['txn_id']); ?></td>
                                     <td><?php echo e($order['customer_name']); ?></td>
-                                    <td class="fw-bold text-success"><?php echo e(money($order['total_amount'])); ?></td>
-                                    <td><span class="badge bg-secondary"><?php echo e($order['order_status']); ?></span></td>
-                                    <td><span class="badge bg-info"><?php echo e($order['shipping_status']); ?></span></td>
+                                    <td class="cell-strong text-success"><?php echo e(money($order['total_amount'])); ?></td>
+                                    <td><span class="badge bg-secondary status"><?php echo e($order['order_status']); ?></span></td>
+                                    <td><span class="badge bg-info status"><?php echo e($order['shipping_status']); ?></span></td>
                                     <td class="small text-muted"><?php echo e(date('M d, Y H:i', strtotime($order['created_at']))); ?></td>
                                     <td>
                                         <?php 
@@ -156,7 +164,13 @@ include __DIR__ . '/../components/sidebar.php';
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">No orders found.</td>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="bi bi-bag-x"></i>
+                                        <div class="empty-title">No orders found</div>
+                                        <div class="empty-text">New customer orders will appear here.</div>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -174,8 +188,8 @@ include __DIR__ . '/../components/sidebar.php';
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="order_id" id="modalOrderId">
                 <div class="modal-header">
-                    <h5 class="modal-title">Update Order Status (<span id="modalOrderTxn"></span>)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title"><i class="bi bi-truck text-primary"></i> Update Order Status <span class="text-muted" id="modalOrderTxn"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

@@ -260,11 +260,21 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">Products</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" onclick="prepareAddModal()">
-            <i class="bi bi-plus-lg me-2"></i> New Product
-        </button>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Products</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Products</h1>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" onclick="prepareAddModal()">
+                <i class="bi bi-plus-lg"></i> New Product
+            </button>
+        </div>
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
@@ -278,25 +288,26 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <form method="POST" onsubmit="event.preventDefault();" class="row g-3 mb-4">
-        <div class="col-md-8">
-            <input type="text" id="productSearchInput" name="product_search" class="form-control" placeholder="Search by product name or SKU..." onkeyup="filterProducts()">
+    <div class="toolbar">
+        <div class="toolbar-search">
+            <i class="bi bi-search navbar-search-icon"></i>
+            <input type="text" id="productSearchInput" name="product_search" class="form-control app-search" style="width:100%;" placeholder="Search by product name or SKU..." onkeyup="filterProducts()" aria-label="Search products">
         </div>
-        <div class="col-md-4">
-            <select class="form-select" id="statusFilter" name="product_status_filter" onchange="filterProducts()">
+        <div class="toolbar-filters">
+            <select class="form-select" id="statusFilter" name="product_status_filter" onchange="filterProducts()" aria-label="Filter by status">
                 <option value="">All Statuses</option>
                 <?php foreach ($productStatuses as $status): ?>
                     <option value="<?php echo e($status); ?>"><?php echo e($status); ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
-    </form>
+    </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Image</th>
@@ -313,23 +324,23 @@ include __DIR__ . '/../components/sidebar.php';
                         <?php if ($products): ?>
                             <?php foreach ($products as $product): ?>
                                 <?php
-                                $stockClass = (int) $product['stock_quantity'] === 0 ? 'text-danger fw-bold' : 'text-dark';
-                                $badgeClass = $product['status'] === 'Active' ? 'bg-success' : ($product['status'] === 'Out of Stock' ? 'bg-danger' : 'bg-secondary');
-                                
+                                $stockClass = (int) $product['stock_quantity'] === 0 ? 'text-danger fw-bold' : '';
+                                $badgeClass = $product['status'] === 'Active' ? 'bg-success status' : ($product['status'] === 'Out of Stock' ? 'bg-danger status' : 'bg-secondary status');
+
                                 // Dynamic placeholder logic if file does not exist
-                                $imgUrl = (!empty($product['image_path']) && file_exists(__DIR__ . '/../' . $product['image_path'])) 
-                                    ? '../' . htmlspecialchars($product['image_path']) 
+                                $imgUrl = (!empty($product['image_path']) && file_exists(__DIR__ . '/../' . $product['image_path']))
+                                    ? '../' . htmlspecialchars($product['image_path'])
                                     : 'https://via.placeholder.com/50x50?text=No+Img';
                                 ?>
                                 <tr class="product-row">
                                     <td class="fw-semibold">#<?php echo e($product['id']); ?></td>
                                     <td>
-                                        <img src="<?php echo $imgUrl; ?>" class="rounded shadow-sm border border-light" alt="Thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                        <img src="<?php echo $imgUrl; ?>" class="table-avatar" style="width:42px;height:42px;" alt="Thumbnail" loading="lazy">
                                     </td>
                                     <td class="prod-name fw-medium"><?php echo e($product['name']); ?></td>
-                                    <td><span class="badge bg-light text-dark border"><?php echo e($product['category'] ?? 'General'); ?></span></td>
+                                    <td><span class="badge bg-light border"><?php echo e($product['category'] ?? 'General'); ?></span></td>
                                     <td class="prod-sku text-uppercase font-monospace"><?php echo e($product['sku']); ?></td>
-                                    <td class="fw-bold text-success"><?php echo e(money($product['price'])); ?></td>
+                                    <td class="cell-strong text-success"><?php echo e(money($product['price'])); ?></td>
                                     <td class="<?php echo e($stockClass); ?>"><?php echo e(number_format((int) $product['stock_quantity'])); ?> units</td>
                                     <td><span class="badge <?php echo e($badgeClass); ?> prod-status"><?php echo e($product['status']); ?></span></td>
                                     <td class="text-nowrap">
@@ -345,15 +356,21 @@ include __DIR__ . '/../components/sidebar.php';
                                             data-description="<?php echo e($product['description'] ?? ''); ?>"
                                             data-image="<?php echo e($product['image_path'] ?? ''); ?>"
                                             onclick="editProduct(this)">
-                                            Edit
+                                            <i class="bi bi-pencil"></i> Edit
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(<?php echo e((int) $product['id']); ?>)">Delete</button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(<?php echo e((int) $product['id']); ?>)"><i class="bi bi-trash"></i> Delete</button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center py-5 text-muted">No products found.</td>
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-box-seam"></i>
+                                        <div class="empty-title">No products found</div>
+                                        <div class="empty-text">Create your first product to populate the catalog.</div>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -371,9 +388,9 @@ include __DIR__ . '/../components/sidebar.php';
                 <input type="hidden" name="action" id="formActionToken" value="create">
                 <input type="hidden" name="product_id" id="formProductIdToken">
                 
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Create Product</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"><i class="bi bi-box-seam text-primary"></i> Create Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">

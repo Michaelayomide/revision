@@ -61,17 +61,27 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">Notifications</h1>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Notifications</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Notifications</h1>
+        </div>
         <?php $unread = array_filter($notifications, fn($n) => !(bool)$n['is_read']); ?>
         <?php if (!empty($unread)): ?>
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
-                <input type="hidden" name="action" value="mark_all_read">
-                <button type="submit" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-check2-all me-1"></i>Mark all as read
-                </button>
-            </form>
+            <div class="page-header-actions">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                    <input type="hidden" name="action" value="mark_all_read">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-check2-all"></i> Mark all as read
+                    </button>
+                </form>
+            </div>
         <?php endif; ?>
     </div>
 
@@ -86,40 +96,40 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-body p-0">
             <?php if ($notifications): ?>
-                <ul class="list-group list-group-flush">
-                    <?php foreach ($notifications as $notif): ?>
-                        <?php $isUnread = !(bool) $notif['is_read']; ?>
-                        <li class="list-group-item d-flex align-items-start gap-3 py-3 px-4<?php echo $isUnread ? ' bg-light' : ''; ?>">
-                            <div class="mt-1">
-                                <i class="bi <?php echo e($typeIcon($notif['type'])); ?> fs-5"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <p class="mb-1 fw-<?php echo $isUnread ? 'semibold' : 'normal'; ?>">
-                                        <?php echo e($notif['message']); ?>
-                                    </p>
-                                    <?php if ($isUnread): ?>
-                                        <form method="POST" class="ms-2 flex-shrink-0">
-                                            <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
-                                            <input type="hidden" name="action" value="mark_read">
-                                            <input type="hidden" name="notification_id" value="<?php echo e($notif['id']); ?>">
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-muted" title="Mark as read">
-                                                <i class="bi bi-check-circle"></i>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
-                                <small class="text-muted"><?php echo e(time_ago($notif['created_at'])); ?></small>
+            <ul class="list-group list-group-flush">
+                <?php foreach ($notifications as $notif): ?>
+                    <?php $isUnread = !(bool) $notif['is_read']; ?>
+                    <li class="list-group-item notif-item d-flex align-items-start gap-3 py-3 px-4<?php echo $isUnread ? ' unread' : ''; ?>">
+                        <div class="notif-icon">
+                            <i class="bi <?php echo e($typeIcon($notif['type'])); ?>"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <p class="mb-1 fw-<?php echo $isUnread ? 'semibold' : 'normal'; ?>">
+                                    <?php echo e($notif['message']); ?>
+                                </p>
                                 <?php if ($isUnread): ?>
-                                    <span class="badge bg-primary ms-2" style="font-size:0.6rem;">New</span>
+                                    <form method="POST" class="ms-2 flex-shrink-0">
+                                        <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
+                                        <input type="hidden" name="action" value="mark_read">
+                                        <input type="hidden" name="notification_id" value="<?php echo e($notif['id']); ?>">
+                                        <button type="submit" class="btn btn-sm btn-link p-0 text-muted" title="Mark as read" aria-label="Mark as read">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                             </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                            <small class="text-muted"><?php echo e(time_ago($notif['created_at'])); ?></small>
+                            <?php if ($isUnread): ?>
+                                <span class="notif-badge-dot ms-1" title="New"></span>
+                            <?php endif; ?>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
             <?php else: ?>
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>

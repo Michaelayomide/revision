@@ -189,11 +189,21 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">System Users</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="bi bi-person-plus-fill me-2"></i>Add Staff
-        </button>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Staff</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">System Users</h1>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="bi bi-person-plus"></i> Add Staff
+            </button>
+        </div>
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
@@ -207,11 +217,11 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <div class="card shadow-sm border-0">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Full Name</th>
@@ -230,8 +240,8 @@ include __DIR__ . '/../components/sidebar.php';
                                 $userRole = (in_array((int)$user['id'], [1, 2], true)) ? 'primary_admin' : $user['role'];
                                 $userStatus = (in_array((int)$user['id'], [1, 2], true)) ? 'Active' : $user['status'];
 
-                                $badgeColor = $userRole === 'primary_admin' ? 'bg-danger' : ($userRole === 'secondary_admin' ? 'bg-warning text-dark' : 'bg-info text-dark');
-                                $statusColor = $userStatus === 'Active' ? 'bg-success' : 'bg-secondary';
+                                $badgeColor = $userRole === 'primary_admin' ? 'bg-danger status' : ($userRole === 'secondary_admin' ? 'bg-warning status' : 'bg-info status');
+                                $statusColor = $userStatus === 'Active' ? 'bg-success status' : 'bg-secondary status';
                                 
                                 // Check if current admin can manage this user
                                 $canManage = false;
@@ -253,7 +263,7 @@ include __DIR__ . '/../components/sidebar.php';
                                     <td>
                                         <?php if ($canManage): ?>
                                             <button 
-                                                class="btn btn-sm btn-outline-dark me-1"
+                                                class="btn btn-sm btn-outline-secondary me-1"
                                                 data-id="<?php echo e($user['id']); ?>"
                                                 data-fullname="<?php echo e($user['fullname']); ?>"
                                                 data-role="<?php echo e($userRole); ?>"
@@ -299,8 +309,8 @@ include __DIR__ . '/../components/sidebar.php';
                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                 <input type="hidden" name="action" value="add_user">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New Staff Account</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title"><i class="bi bi-person-plus text-primary"></i> Add New Staff Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -353,8 +363,8 @@ include __DIR__ . '/../components/sidebar.php';
                 <input type="hidden" name="action" value="update_user">
                 <input type="hidden" name="user_id" id="modalUserId">
                 <div class="modal-header">
-                    <h5 class="modal-title">Modify Security Profile (<span id="modalUsername"></span>)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title"><i class="bi bi-shield-lock text-primary"></i> Modify Security Profile <span class="text-muted" id="modalUsername"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

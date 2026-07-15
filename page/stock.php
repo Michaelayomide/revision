@@ -108,11 +108,21 @@ include __DIR__ . '/../components/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary mb-0">Stock & Inventory</h1>
-        <a href="products.php" class="btn btn-outline-primary">
-            <i class="bi bi-plus-circle me-2"></i> Manage Catalog
-        </a>
+    <div class="page-header">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Stock</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Stock &amp; Inventory</h1>
+        </div>
+        <div class="page-header-actions">
+            <a href="products.php" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle"></i> Manage Catalog
+            </a>
+        </div>
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
@@ -126,51 +136,53 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #10b981, #059669);">
                 <div class="card-body">
-                    <i class="bi bi-currency-dollar fs-1 mb-3"></i>
-                    <h5>Total Stock Value</h5>
-                    <h2 class="fw-bold"><?php echo e(money($summary['stock_value'])); ?></h2>
+                    <span class="stat-icon"><i class="bi bi-currency-dollar"></i></span>
+                    <span class="stat-label">Total Stock Value</span>
+                    <span class="stat-value"><?php echo e(money($summary['stock_value'])); ?></span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
                 <div class="card-body">
-                    <i class="bi bi-boxes fs-1 mb-3"></i>
-                    <h5>Total Units</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $summary['stock_units'])); ?></h2>
+                    <span class="stat-icon"><i class="bi bi-boxes"></i></span>
+                    <span class="stat-label">Total Units</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $summary['stock_units'])); ?></span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                 <div class="card-body">
-                    <i class="bi bi-exclamation-triangle fs-1 mb-3"></i>
-                    <h5>Low Stock Items</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $summary['low_stock'])); ?></h2>
+                    <span class="stat-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                    <span class="stat-label">Low Stock Items</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $summary['low_stock'])); ?></span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card text-white h-100" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
                 <div class="card-body">
-                    <i class="bi bi-x-circle fs-1 mb-3"></i>
-                    <h5>Out of Stock</h5>
-                    <h2 class="fw-bold"><?php echo e(number_format((float) $summary['out_of_stock'])); ?></h2>
+                    <span class="stat-icon"><i class="bi bi-x-circle"></i></span>
+                    <span class="stat-label">Out of Stock</span>
+                    <span class="stat-value"><?php echo e(number_format((float) $summary['out_of_stock'])); ?></span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white fw-bold">Current Stock Levels</div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Current Stock Levels</span>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>SKU</th>
                             <th>Product</th>
@@ -185,7 +197,7 @@ include __DIR__ . '/../components/sidebar.php';
                             <?php foreach ($products as $product): ?>
                                 <?php
                                 $stockQuantity = (int) $product['stock_quantity'];
-                                $badgeClass = $stockQuantity === 0 ? 'bg-danger' : ($stockQuantity <= 10 ? 'bg-warning text-dark' : 'bg-success');
+                                $badgeClass = $stockQuantity === 0 ? 'bg-danger status' : ($stockQuantity <= 10 ? 'bg-warning status' : 'bg-success status');
                                 ?>
                                 <tr>
                                     <td class="fw-semibold"><?php echo e($product['sku']); ?></td>
@@ -217,7 +229,13 @@ include __DIR__ . '/../components/sidebar.php';
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">No stock records found.</td>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-box"></i>
+                                        <div class="empty-title">No stock records found</div>
+                                        <div class="empty-text">Add products to start tracking inventory.</div>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

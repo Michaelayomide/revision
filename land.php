@@ -91,8 +91,8 @@
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="page/login.php">Sign In</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4 shadow-sm" href="page/login.php">Live Demo <i class="bi bi-arrow-right ms-1"></i></a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="customer/login.php">Customer Access</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-4 shadow-sm" href="page/signup.php">Admin Panel <i class="bi bi-shield-lock ms-1"></i></a></li>
                 </ul>
             </div>
         </div>
@@ -106,9 +106,13 @@
                     <h1 class="display-4 text-white mb-4" style="font-weight: 800; letter-spacing: -1px;">Production Ready Full-Stack Admin Engine</h1>
                     <p class="lead text-white-50 mb-5 px-md-5 fs-5">Save months of raw engineering hours. A secure, interactive ecosystem featuring live authentication safeguards, product directories, and inventory managers built directly on PHP and PDO.</p>
                     
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="page/login.php" class="btn btn-light btn-lg px-4 py-3 fs-6 fw-semibold shadow">Deploy Application Instance</a>
-                        <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3 fs-6">Explore Architecture</a>
+                    <div class="d-flex justify-content-center flex-wrap gap-3">
+                        <a href="customer/register.php" class="btn btn-light btn-lg px-4 py-3 fs-6 fw-semibold shadow">
+                            <i class="bi bi-bag-check me-2 text-primary"></i>Enter Customer Storefront
+                        </a>
+                        <a href="page/signup.php" class="btn btn-primary btn-lg px-4 py-3 fs-6 fw-semibold shadow">
+                            <i class="bi bi-shield-lock me-2"></i>Access Administrative Hub
+                        </a>
                     </div>
                 </div>
             </div>
@@ -231,7 +235,7 @@
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> 1 Year of Core Updates</li>
                                 <li class="text-muted"><i class="bi bi-x text-danger me-2"></i> Premium Priority Support</li>
                             </ul>
-                            <a href="page/login.php" class="btn btn-outline-primary w-100 py-2 mt-2">Purchase Source Stack</a>
+                            <a href="customer/login.php" class="btn btn-outline-primary w-100 py-2 mt-2">Purchase Source Stack</a>
                         </div>
                     </div>
                 </div>
@@ -249,7 +253,7 @@
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> Direct Setup Documentation</li>
                                 <li class="mb-3"><i class="bi bi-check2 text-success me-2"></i> 24/7 Server Deployment Support</li>
                             </ul>
-                            <a href="page/login.php" class="btn btn-primary w-100 py-2 mt-2 shadow-sm">Buy Commercial Access</a>
+                            <a href="admin/login.php" class="btn btn-primary w-100 py-2 mt-2 shadow-sm">Buy Commercial Access</a>
                         </div>
                     </div>
                 </div>
@@ -261,7 +265,7 @@
         <div class="container py-3">
             <h2 class="fw-bold mb-3 fs-2">Ready to ship your next web application?</h2>
             <p class="text-white-50 mb-4 px-md-5 mx-auto" style="max-width: 600px;">Stop building your user directories and database abstraction scripts from scratch every time.</p>
-            <a href="page/login.php" class="btn btn-primary btn-lg px-5 py-3 fs-6 fw-semibold">Get Started Instantly</a>
+            <a href="admin/login.php" class="btn btn-primary btn-lg px-5 py-3 fs-6 fw-semibold">Get Started Instantly</a>
         </div>
     </section>
 

@@ -107,13 +107,21 @@ include __DIR__ . '/../components/navbar.php';
 include __DIR__ . '/../components/sidebar.php';
 ?>
 
-<main class="main-content d-flex flex-column align-items-start justify-content-start min-vh-100">
-    <div class="d-flex justify-content-between align-items-center w-100 mb-4">
+<main class="main-content">
+    <div class="page-header">
         <div>
-            <h1 class="fw-bold text-primary mb-0">Customer Accounts</h1>
-            <small class="text-muted">Customers inactive for ≥<?php echo e($inactivityMonths); ?> months are eligible for deletion.</small>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Customers</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">Customer Accounts</h1>
+            <div class="page-subtitle">Customers inactive for ≥<?php echo e($inactivityMonths); ?> months are eligible for deletion.</div>
         </div>
-        <span class="badge bg-secondary fs-6"><?php echo count($customers); ?> Registered</span>
+        <div class="page-header-actions">
+            <span class="badge bg-light border fs-6"><?php echo count($customers); ?> Registered</span>
+        </div>
     </div>
 
     <?php foreach ($flashMessages as $message): ?>
@@ -127,16 +135,18 @@ include __DIR__ . '/../components/sidebar.php';
         <div class="alert alert-warning shadow-sm w-100"><?php echo e($loadError); ?></div>
     <?php endif; ?>
 
-    <div class="mb-4 w-100">
-        <input type="text" id="customerSearch" class="form-control" placeholder="Search by name or email..."
-               onkeyup="filterCustomers()" style="max-width:400px;">
+    <div class="toolbar">
+        <div class="toolbar-search">
+            <i class="bi bi-search navbar-search-icon"></i>
+            <input type="text" id="customerSearch" class="form-control app-search" style="width:100%;" placeholder="Search by name or email..." onkeyup="filterCustomers()" aria-label="Search customers">
+        </div>
     </div>
 
-    <div class="card shadow-sm border-0 w-100 align-self-start" style="height: auto;">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Customer</th>
                             <th>Email</th>
@@ -162,21 +172,21 @@ include __DIR__ . '/../components/sidebar.php';
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($cust['fullname']); ?>&background=10b981&color=fff"
-                                                 class="rounded-circle" width="34" height="34" alt="">
+                                                 class="table-avatar" width="36" height="36" alt="">
                                             <span class="fw-semibold cust-name"><?php echo e($cust['fullname']); ?></span>
                                         </div>
                                     </td>
                                     <td class="text-muted cust-email"><?php echo e($cust['email']); ?></td>
                                     <td>
-                                        <span class="badge <?php echo $isActive ? 'bg-success' : 'bg-secondary'; ?>">
+                                        <span class="badge <?php echo $isActive ? 'bg-success status' : 'bg-secondary status'; ?>">
                                             <?php echo $isActive ? 'Active' : 'Inactive'; ?>
                                         </span>
                                         <?php if ($isInactive): ?>
-                                            <span class="badge bg-warning text-dark ms-1" title="Eligible for deletion">Dormant</span>
+                                            <span class="badge bg-warning status ms-1" title="Eligible for deletion">Dormant</span>
                                         <?php endif; ?>
                                     </td>
                                     <td><?php echo e($cust['order_count']); ?></td>
-                                    <td class="fw-bold text-success"><?php echo e(money($cust['total_spent'])); ?></td>
+                                    <td class="cell-strong text-success"><?php echo e(money($cust['total_spent'])); ?></td>
                                     <td class="small text-muted">
                                         <?php echo e($lastActive ? time_ago($lastActive) : 'Never'); ?>
                                     </td>
@@ -211,9 +221,12 @@ include __DIR__ . '/../components/sidebar.php';
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="bi bi-people fs-1 d-block mb-2"></i>
-                                    No customers registered yet.
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="bi bi-people"></i>
+                                        <div class="empty-title">No customers registered yet</div>
+                                        <div class="empty-text">Customer accounts will appear here once they sign up.</div>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endif; ?>
